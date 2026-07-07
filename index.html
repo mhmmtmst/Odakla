@@ -136,6 +136,16 @@
 
   <div id="app-content" style="display:none;">
     <div class="card">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div id="profile-avatar" style="width:48px; height:48px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:18px; overflow:hidden; flex-shrink:0;"></div>
+        <div>
+          <p style="margin:0; font-weight:600;" id="profile-name"></p>
+          <p style="margin:0; font-size:12px; color:var(--text-secondary);" id="profile-meta"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="timer-row">
         <div class="phase-badge" id="phase-badge"><span class="dot"></span><span id="phase-text">Hazır</span></div>
         <div class="timer" id="timer-main">00:00:00</div>
@@ -185,6 +195,14 @@
       <div id="history"></div>
     </div>
 
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <p class="section-label" style="margin:0;"><i class="ti ti-trophy" style="vertical-align:-2px;"></i> Liderlik tablosu (tüm kullanıcılar)</p>
+        <button id="leaderboard-refresh-btn" style="padding:5px 10px; font-size:12px;">Yenile</button>
+      </div>
+      <div id="leaderboard-list"><p class="empty">Yükleniyor…</p></div>
+    </div>
+
     <div class="footer-note">Hesabına giriş yaptığın her cihazda aynı veriler otomatik görünür.</div>
   </div>
 </div>
@@ -214,7 +232,7 @@
   var breakdownRange = 'today';
 
   var fbApp = null, fbAuth = null, fbAuthMod = null, fbDb = null, fbFsMod = null;
-  var currentUid = null, currentEmail = null;
+  var currentUid = null, currentEmail = null, currentDisplayName = null, currentPhotoURL = null;
   var unsubscribeFn = null;
   var suppressPush = false;
   var authMode = 'login';
@@ -282,6 +300,21 @@
     fbAuthMod.onAuthStateChanged(fbAuth, onAuthChanged);
   }
 
+  function renderProfile(user){
+    currentDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Kullanıcı');
+    currentPhotoURL = user.photoURL || null;
+    var avatarEl = document.getElementById('profile-avatar');
+    if(currentPhotoURL){
+      avatarEl.innerHTML = '<img src="' + currentPhotoURL + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      avatarEl.textContent = currentDisplayName.charAt(0).toUpperCase();
+      avatarEl.style.color = 'var(--study)';
+    }
+    document.getElementById('profile-name').textContent = currentDisplayName;
+    var joined = (user.metadata && user.metadata.creationTime) ? new Date(user.metadata.creationTime) : null;
+    document.getElementById('profile-meta').textContent = user.email + (joined ? ' · Üyelik: ' + joined.toLocaleDateString('tr-TR') : '');
+  }
+
   function onAuthChanged(user){
     document.getElementById('auth-loading').style.display = 'none';
     if(user){
@@ -291,12 +324,14 @@
       document.getElementById('auth-logged-in').style.display = '';
       document.getElementById('auth-email-label').textContent = currentEmail;
       document.getElementById('app-content').style.display = '';
+      renderProfile(user);
       loadLocalForUser();
       renderCourses();
       setButtons();
       if(status !== 'idle') startTicking();
       renderAll();
       pullAndSubscribeFirestore();
+      loadLeaderboard();
     } else {
       currentUid = null;
       if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
@@ -312,8 +347,40 @@
     try{
       var docRef = fbFsMod.doc(fbDb, 'derstakip_users', currentUid);
       await fbFsMod.setDoc(docRef, { courses: courses, sessions: sessions, updatedAt: Date.now() });
+      var totalMs = sessions.reduce(function(sum, s){ return sum + s.studyMs; }, 0);
+      var lbRef = fbFsMod.doc(fbDb, 'leaderboard', currentUid);
+      await fbFsMod.setDoc(lbRef, { displayName: currentDisplayName, totalMs: totalMs, updatedAt: Date.now() });
     } catch(e){ console.error(e); }
   }
+
+  async function loadLeaderboard(){
+    var list = document.getElementById('leaderboard-list');
+    list.innerHTML = '<p class="empty">Yükleniyor…</p>';
+    try{
+      await initFirebase();
+      var q = fbFsMod.query(fbFsMod.collection(fbDb, 'leaderboard'), fbFsMod.orderBy('totalMs', 'desc'), fbFsMod.limit(50));
+      var snap = await fbFsMod.getDocs(q);
+      var rows = [];
+      snap.forEach(function(docSnap){ rows.push({ id: docSnap.id, data: docSnap.data() }); });
+      list.innerHTML = '';
+      if(rows.length === 0){ list.innerHTML = '<p class="empty">Henüz veri yok.</p>'; return; }
+      rows.forEach(function(r, idx){
+        var row = document.createElement('div');
+        row.className = 'hist-row';
+        if(r.id === currentUid) row.style.background = 'var(--study-dim)';
+        var left = document.createElement('div');
+        left.className = 'hist-left';
+        left.innerHTML = '<span style="width:20px; display:inline-block; color:var(--text-secondary); font-family:var(--font-mono);">' + (idx + 1) + '</span><span>' + (r.data.displayName || 'Kullanıcı') + '</span>';
+        var right = document.createElement('div');
+        right.className = 'hist-right';
+        right.innerHTML = '<span class="t-study">' + fmtDuration(r.data.totalMs || 0) + '</span>';
+        row.appendChild(left);
+        row.appendChild(right);
+        list.appendChild(row);
+      });
+    } catch(e){ console.error(e); list.innerHTML = '<p class="empty">Yüklenemedi, tekrar dener misin?</p>'; }
+  }
+  document.getElementById('leaderboard-refresh-btn').onclick = loadLeaderboard;
 
   async function pullAndSubscribeFirestore(){
     if(!currentUid) return;
