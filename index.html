@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ders Takip</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+  :root{
+    --bg: #0B0E14;
+    --surface: #12161F;
+    --surface-2: #191F2C;
+    --border: #232838;
+    --border-strong: #313850;
+    --text-primary: #E7EAF0;
+    --text-secondary: #8B93A6;
+    --text-muted: #5C6478;
+    --study: #2DD4A7;
+    --study-dim: rgba(45,212,167,0.15);
+    --break: #F2B84B;
+    --break-dim: rgba(242,184,75,0.15);
+    --danger: #E24B4A;
+    --radius: 10px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Consolas, monospace;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    padding: 32px 16px 80px;
+  }
+  .wrap{ max-width: 720px; margin: 0 auto; }
+  .prompt{ font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  h1{ font-size: 22px; font-weight: 600; margin: 0 0 24px; letter-spacing: -0.2px; }
+  h1 span{ color: var(--study); }
+  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .phase-badge{ display:inline-flex; align-items:center; gap:6px; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-secondary); margin: 0 auto 12px; }
+  .phase-badge.studying{ color: var(--study); background: var(--study-dim); }
+  .phase-badge.break{ color: var(--break); background: var(--break-dim); }
+  .dot{ width:7px; height:7px; border-radius:50%; background: currentColor; display:inline-block; }
+  .timer-row{ text-align:center; }
+  .timer{ font-family: var(--font-mono); font-size: 52px; font-weight: 600; letter-spacing: 1px; line-height:1; margin: 4px 0 2px; }
+  .course-label{ font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
+  .pills{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+  .pill{ font-family: var(--font-sans); font-size: 13px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; }
+  .pill.selected{ border-color: transparent; color: #06110D; font-weight:600; }
+  .add-row{ display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+  input[type=text], input[type=email], input[type=password]{
+    background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text-primary);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; width: 220px; outline: none;
+  }
+  input[type=text]:focus, input[type=email]:focus, input[type=password]:focus{ border-color: var(--study); }
+  button{ font-family: var(--font-sans); font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); cursor: pointer; }
+  button:hover{ border-color: var(--text-muted); }
+  button:active{ transform: scale(0.98); }
+  button.primary{ background: var(--study); border-color: var(--study); color: #06110D; }
+  button.warn{ background: var(--break); border-color: var(--break); color: #2A1B02; }
+  .btn-row{ display:flex; gap:10px; justify-content:center; }
+  .btn-row button{ min-width: 130px; }
+  .stats-grid{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+  .stat{ background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .label{ font-size:12px; color: var(--text-secondary); margin:0 0 4px; }
+  .stat .value{ font-family: var(--font-mono); font-size: 20px; font-weight:600; margin:0; }
+  .tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .tab{ font-size:12px; padding:5px 12px; border-radius:7px; cursor:pointer; color: var(--text-secondary); border:1px solid var(--border); }
+  .tab.active{ color: var(--text-primary); border-color: var(--border-strong); background: var(--surface-2); }
+  .breakdown-row{ display:flex; align-items:center; justify-content:space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .breakdown-row:last-child{ border-bottom:none; }
+  .breakdown-left{ display:flex; align-items:center; gap:9px; }
+  .breakdown-times{ display:flex; gap:12px; font-family: var(--font-mono); font-size:12px; }
+  .t-study{ color: var(--study); }
+  .t-break{ color: var(--break); }
+  .section-label{ font-size:13px; color: var(--text-secondary); margin: 0 0 10px; }
+  .bar-row{ margin-bottom: 12px; }
+  .bar-top{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
+  .bar-top .time{ font-family: var(--font-mono); color: var(--text-secondary); font-size:12px; }
+  .track{ height:8px; background: var(--surface-2); border-radius:999px; overflow:hidden; }
+  .fill{ height:100%; border-radius:999px; }
+  .heat-wrap{ display:flex; gap:3px; overflow-x:auto; padding-bottom:6px; }
+  .heat-col{ display:flex; flex-direction:column; gap:3px; }
+  .heat-cell{ width:11px; height:11px; border-radius:2px; background: var(--surface-2); }
+  .empty{ font-size:13px; color: var(--text-muted); }
+  .hist-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-left{ display:flex; align-items:center; gap:9px; }
+  .hist-right{ font-family: var(--font-mono); font-size:12px; color: var(--text-secondary); display:flex; gap:10px; }
+  .footer-note{ text-align:center; font-size:12px; color: var(--text-muted); margin-top: 28px; }
+  ::-webkit-scrollbar{ height:6px; }
+  ::-webkit-scrollbar-thumb{ background: var(--border-strong); border-radius:4px; }
+  .sync-status{ display:flex; align-items:center; justify-content:space-between; font-size:13px; }
+  .sync-dot{ width:7px; height:7px; border-radius:50%; background: var(--text-muted); display:inline-block; margin-right:7px; }
+  .sync-dot.on{ background: var(--study); }
+  .auth-error{ font-size:12px; color: var(--danger); margin-top:8px; min-height: 14px; }
+  .auth-form input{ width:100%; margin-bottom:10px; }
+  .link-btn{ background:none; border:none; color: var(--study); padding:0; font-size:12px; cursor:pointer; text-decoration:underline; }
+  .divider{ display:flex; align-items:center; gap:10px; margin:16px 0; font-size:12px; color: var(--text-muted); }
+  .divider::before, .divider::after{ content:''; flex:1; height:1px; background: var(--border); }
+  .google-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="prompt">~/ders-takip $ durum</div>
+  <h1>Ders <span>Takip</span></h1>
+
+  <div class="card" id="auth-card">
+    <div id="auth-loading"><p class="empty">Yükleniyor…</p></div>
+
+    <div id="auth-form-wrap" class="auth-form" style="display:none;">
+      <p class="section-label" id="auth-title">Giriş yap</p>
+      <input type="email" id="auth-email" placeholder="e-posta adresin">
+      <input type="password" id="auth-password" placeholder="şifre (en az 6 karakter)">
+      <div class="btn-row" style="justify-content:flex-start;">
+        <button class="primary" id="auth-submit-btn">Giriş yap</button>
+        <button id="auth-switch-btn">Hesabın yok mu? Kayıt ol</button>
+      </div>
+      <p style="margin: 10px 0 0;"><button class="link-btn" id="auth-forgot-btn">Şifremi unuttum</button></p>
+      <p class="auth-error" id="auth-error"></p>
+      <div class="divider">veya</div>
+      <button class="google-btn" id="auth-google-btn">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.8 14.3-5l-6.6-5.6C29.6 34.7 26.9 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.6 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.6C41.6 36 44 30.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Google ile giriş yap
+      </button>
+    </div>
+
+    <div id="auth-logged-in" style="display:none;">
+      <div class="sync-status">
+        <span><span class="sync-dot on"></span><span id="auth-email-label"></span></span>
+        <button id="auth-logout-btn" style="padding:6px 12px; font-size:12px;">Çıkış yap</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-content" style="display:none;">
+    <div class="card">
+      <div class="timer-row">
+        <div class="phase-badge" id="phase-badge"><span class="dot"></span><span id="phase-text">Hazır</span></div>
+        <div class="timer" id="timer-main">00:00:00</div>
+        <div class="course-label" id="course-label">Önce bir ders seç</div>
+      </div>
+
+      <div class="pills" id="course-row"></div>
+
+      <div class="add-row">
+        <input type="text" id="new-course" placeholder="Yeni ders adı (örn. React Kursu)">
+        <button id="add-course-btn"><i class="ti ti-plus"></i> Ekle</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" id="start-btn"><i class="ti ti-player-play"></i> Başlat</button>
+        <button id="break-btn" style="display:none;"></button>
+        <button id="stop-btn" style="display:none;"><i class="ti ti-square"></i> Bitir</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><p class="label">Bugün</p><p class="value" id="today-total">0dk</p></div>
+      <div class="stat"><p class="label">Bu hafta</p><p class="value" id="week-total">0dk</p></div>
+      <div class="stat"><p class="label">Toplam oturum</p><p class="value" id="session-count">0</p></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <div class="tab active" data-range="today">Bugün</div>
+        <div class="tab" data-range="week">Bu hafta</div>
+      </div>
+      <div id="breakdown-list"></div>
+    </div>
+
+    <div class="card">
+      <p class="section-label">Derslere göre toplam (tüm zamanlar)</p>
+      <div id="course-bars"></div>
+    </div>
+
+    <div class="card">
+      <p class="section-label">Son 10 hafta</p>
+      <div class="heat-wrap" id="heatmap"></div>
+    </div>
+
+    <div class="card">
+      <p class="section-label">Son oturumlar</p>
+      <div id="history"></div>
+    </div>
+
+    <div class="footer-note">Hesabına giriş yaptığın her cihazda aynı veriler otomatik görünür.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var PALETTE = ['#5B8DEF','#2DD4A7','#E2725B','#D6679B','#9B8AFB','#E0B84E','#7FBD5B','#4FC3E0'];
+  var LS_COURSES = 'derstakip_courses';
+  var LS_SESSIONS = 'derstakip_sessions';
+  var LS_ACTIVE = 'derstakip_active';
+
+  var DEFAULT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDnI1Ebr5vGqt25O5dNIFZK08l8ev2Y1jc",
+    authDomain: "ders-takip-7ae49.firebaseapp.com",
+    projectId: "ders-takip-7ae49",
+    storageBucket: "ders-takip-7ae49.firebasestorage.app",
+    messagingSenderId: "1017991514077",
+    appId: "1:1017991514077:web:2e1fb9bc74b3637b0c9834"
+  };
+
+  var courses = [];
+  var sessions = [];
+  var selectedCourseId = null;
+  var status = 'idle';
+  var studyMs = 0, breakMs = 0, phaseStartTs = null;
+  var tickHandle = null;
+  var breakdownRange = 'today';
+
+  var fbApp = null, fbAuth = null, fbAuthMod = null, fbDb = null, fbFsMod = null;
+  var currentUid = null, currentEmail = null;
+  var unsubscribeFn = null;
+  var suppressPush = false;
+  var authMode = 'login';
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function todayStr(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function fmtHMS(ms){
+    var s = Math.floor(ms/1000);
+    var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return [h,m,sec].map(function(x){ return String(x).padStart(2,'0'); }).join(':');
+  }
+  function fmtDuration(ms){
+    var mins = Math.round(ms/60000);
+    if(mins < 60) return mins + 'dk';
+    var h = Math.floor(mins/60), m = mins%60;
+    return h + 'sa' + (m ? ' ' + m + 'dk' : '');
+  }
+  function lsKey(base){ return base + '_' + currentUid; }
+  function mergeArr(a, b, key){
+    var map = {};
+    (b||[]).forEach(function(x){ map[x[key]] = x; });
+    (a||[]).forEach(function(x){ map[x[key]] = x; });
+    return Object.keys(map).map(function(k){ return map[k]; });
+  }
+
+  function loadLocalForUser(){
+    try { courses = JSON.parse(localStorage.getItem(lsKey(LS_COURSES)) || '[]'); } catch(e){ courses = []; }
+    try { sessions = JSON.parse(localStorage.getItem(lsKey(LS_SESSIONS)) || '[]'); } catch(e){ sessions = []; }
+    try {
+      var a = JSON.parse(localStorage.getItem(lsKey(LS_ACTIVE)) || 'null');
+      if(a){ selectedCourseId = a.courseId; status = a.status; studyMs = a.studyMs; breakMs = a.breakMs; phaseStartTs = a.phaseStartTs; }
+    } catch(e){}
+  }
+  function saveCourses(){ localStorage.setItem(lsKey(LS_COURSES), JSON.stringify(courses)); }
+  function saveSessions(){ localStorage.setItem(lsKey(LS_SESSIONS), JSON.stringify(sessions)); }
+  function saveActive(){
+    if(status === 'idle'){ localStorage.removeItem(lsKey(LS_ACTIVE)); return; }
+    localStorage.setItem(lsKey(LS_ACTIVE), JSON.stringify({courseId:selectedCourseId, status:status, studyMs:studyMs, breakMs:breakMs, phaseStartTs:phaseStartTs}));
+  }
+
+  function translateAuthError(code){
+    var map = {
+      'auth/email-already-in-use': 'Bu e-posta zaten kayıtlı, giriş yapmayı dene.',
+      'auth/invalid-email': 'E-posta adresi geçersiz.',
+      'auth/weak-password': 'Şifre en az 6 karakter olmalı.',
+      'auth/wrong-password': 'Şifre yanlış.',
+      'auth/user-not-found': 'Bu e-posta ile kayıt bulunamadı.',
+      'auth/invalid-credential': 'E-posta veya şifre yanlış.',
+      'auth/too-many-requests': 'Çok fazla deneme yapıldı, biraz sonra tekrar dene.',
+      'auth/popup-closed-by-user': 'Google penceresi kapatıldı, tekrar dener misin?',
+      'auth/unauthorized-domain': 'Bu site adresi Firebase\'de henüz yetkili değil.',
+      'auth/cancelled-popup-request': 'Önceki pencere hâlâ açık, tekrar dener misin?'
+    };
+    return map[code] || 'Bir hata oluştu, tekrar dener misin?';
+  }
+
+  async function initFirebase(){
+    if(fbApp) return;
+    var appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    fbAuthMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+    fbFsMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    fbApp = appMod.initializeApp(DEFAULT_FIREBASE_CONFIG);
+    fbAuth = fbAuthMod.getAuth(fbApp);
+    fbDb = fbFsMod.getFirestore(fbApp);
+    fbAuthMod.onAuthStateChanged(fbAuth, onAuthChanged);
+  }
+
+  function onAuthChanged(user){
+    document.getElementById('auth-loading').style.display = 'none';
+    if(user){
+      currentUid = user.uid;
+      currentEmail = user.email;
+      document.getElementById('auth-form-wrap').style.display = 'none';
+      document.getElementById('auth-logged-in').style.display = '';
+      document.getElementById('auth-email-label').textContent = currentEmail;
+      document.getElementById('app-content').style.display = '';
+      loadLocalForUser();
+      renderCourses();
+      setButtons();
+      if(status !== 'idle') startTicking();
+      renderAll();
+      pullAndSubscribeFirestore();
+    } else {
+      currentUid = null;
+      if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
+      stopTicking();
+      document.getElementById('app-content').style.display = 'none';
+      document.getElementById('auth-logged-in').style.display = 'none';
+      document.getElementById('auth-form-wrap').style.display = '';
+    }
+  }
+
+  async function pushRemote(){
+    if(suppressPush || !currentUid) return;
+    try{
+      var docRef = fbFsMod.doc(fbDb, 'derstakip_users', currentUid);
+      await fbFsMod.setDoc(docRef, { courses: courses, sessions: sessions, updatedAt: Date.now() });
+    } catch(e){ console.error(e); }
+  }
+
+  async function pullAndSubscribeFirestore(){
+    if(!currentUid) return;
+    try{
+      var docRef = fbFsMod.doc(fbDb, 'derstakip_users', currentUid);
+      var snap = await fbFsMod.getDoc(docRef);
+      if(snap.exists()){
+        var remote = snap.data();
+        suppressPush = true;
+        courses = mergeArr(courses, remote.courses || [], 'id');
+        sessions = mergeArr(sessions, remote.sessions || [], 'id');
+        saveCourses(); saveSessions();
+        suppressPush = false;
+        renderCourses(); renderAll();
+      }
+      await pushRemote();
+      if(!unsubscribeFn){
+        unsubscribeFn = fbFsMod.onSnapshot(docRef, function(snap2){
+          if(!snap2.exists()) return;
+          var remote2 = snap2.data();
+          var before = JSON.stringify({c: courses, s: sessions});
+          var mergedCourses = mergeArr(courses, remote2.courses || [], 'id');
+          var mergedSessions = mergeArr(sessions, remote2.sessions || [], 'id');
+          var after = JSON.stringify({c: mergedCourses, s: mergedSessions});
+          if(before !== after){
+            suppressPush = true;
+            courses = mergedCourses; sessions = mergedSessions;
+            saveCourses(); saveSessions();
+            suppressPush = false;
+            renderCourses(); renderAll();
+          }
+        });
+      }
+    } catch(e){ console.error(e); }
+  }
+
+  document.getElementById('auth-switch-btn').onclick = function(){
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    document.getElementById('auth-title').textContent = authMode === 'login' ? 'Giriş yap' : 'Kayıt ol';
+    document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Giriş yap' : 'Kayıt ol';
+    document.getElementById('auth-switch-btn').textContent = authMode === 'login' ? 'Hesabın yok mu? Kayıt ol' : 'Hesabın var mı? Giriş yap';
+    document.getElementById('auth-error').textContent = '';
+  };
+
+  async function submitAuth(){
+    var email = document.getElementById('auth-email').value.trim();
+    var pass = document.getElementById('auth-password').value;
+    var errEl = document.getElementById('auth-error');
+    errEl.style.color = 'var(--danger)';
+    errEl.textContent = '';
+    if(!email || !pass){ errEl.textContent = 'E-posta ve şifre gerekli.'; return; }
+    try{
+      await initFirebase();
+      if(authMode === 'signup'){
+        await fbAuthMod.createUserWithEmailAndPassword(fbAuth, email, pass);
+      } else {
+        await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, pass);
+      }
+    } catch(e){
+      errEl.textContent = translateAuthError(e.code);
+    }
+  }
+  document.getElementById('auth-submit-btn').onclick = submitAuth;
+  document.getElementById('auth-password').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') submitAuth();
+  });
+
+  document.getElementById('auth-logout-btn').onclick = async function(){
+    if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
+    await fbAuthMod.signOut(fbAuth);
+  };
+
+  document.getElementById('auth-google-btn').onclick = async function(){
+    var errEl = document.getElementById('auth-error');
+    errEl.style.color = 'var(--danger)';
+    errEl.textContent = '';
+    try{
+      await initFirebase();
+      var provider = new fbAuthMod.GoogleAuthProvider();
+      await fbAuthMod.signInWithPopup(fbAuth, provider);
+    } catch(e){
+      errEl.textContent = translateAuthError(e.code);
+    }
+  };
+
+  document.getElementById('auth-forgot-btn').onclick = async function(){
+    var email = document.getElementById('auth-email').value.trim();
+    var errEl = document.getElementById('auth-error');
+    if(!email){
+      errEl.style.color = 'var(--danger)';
+      errEl.textContent = 'Önce e-posta adresini yukarıya yaz, sonra tekrar dene.';
+      return;
+    }
+    try{
+      await initFirebase();
+      await fbAuthMod.sendPasswordResetEmail(fbAuth, email);
+      errEl.style.color = 'var(--study)';
+      errEl.textContent = 'Şifre sıfırlama bağlantısı ' + email + ' adresine gönderildi.';
+    } catch(e){
+      errEl.style.color = 'var(--danger)';
+      errEl.textContent = translateAuthError(e.code);
+    }
+  };
+
+  function courseColor(id){ var idx = courses.findIndex(function(c){ return c.id===id; }); return PALETTE[idx % PALETTE.length] || '#5C6478'; }
+  function courseName(id){ var c = courses.find(function(c){ return c.id===id; }); return c ? c.name : 'Silinmiş ders'; }
+
+  function renderCourses(){
+    var row = document.getElementById('course-row');
+    row.innerHTML = '';
+    courses.forEach(function(c){
+      var pill = document.createElement('button');
+      pill.className = 'pill' + (c.id === selectedCourseId ? ' selected' : '');
+      pill.textContent = c.name;
+      if(c.id === selectedCourseId) pill.style.background = courseColor(c.id);
+      pill.onclick = function(){
+        if(status !== 'idle') return;
+        selectedCourseId = c.id;
+        renderCourses();
+        document.getElementById('course-label').textContent = c.name;
+      };
+      row.appendChild(pill);
+    });
+    document.getElementById('course-label').textContent = selectedCourseId ? courseName(selectedCourseId) : 'Önce bir ders seç';
+  }
+
+  document.getElementById('add-course-btn').onclick = function(){
+    var input = document.getElementById('new-course');
+    var name = input.value.trim();
+    if(!name) return;
+    var c = { id: uid(), name: name };
+    courses.push(c);
+    selectedCourseId = c.id;
+    input.value = '';
+    saveCourses();
+    renderCourses();
+    pushRemote();
+  };
+  document.getElementById('new-course').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('add-course-btn').click();
+  });
+
+  function setButtons(){
+    var startBtn = document.getElementById('start-btn');
+    var breakBtn = document.getElementById('break-btn');
+    var stopBtn = document.getElementById('stop-btn');
+    var badge = document.getElementById('phase-badge');
+    var phaseText = document.getElementById('phase-text');
+    if(status === 'idle'){
+      startBtn.style.display = '';
+      breakBtn.style.display = 'none';
+      stopBtn.style.display = 'none';
+      badge.className = 'phase-badge';
+      phaseText.textContent = 'Hazır';
+    } else {
+      startBtn.style.display = 'none';
+      breakBtn.style.display = '';
+      stopBtn.style.display = '';
+      if(status === 'studying'){
+        breakBtn.className = 'warn';
+        breakBtn.innerHTML = '<i class="ti ti-player-pause"></i> Mola ver';
+        badge.className = 'phase-badge studying';
+        phaseText.textContent = 'Çalışıyor';
+      } else {
+        breakBtn.className = 'primary';
+        breakBtn.innerHTML = '<i class="ti ti-player-play"></i> Devam et';
+        badge.className = 'phase-badge break';
+        phaseText.textContent = 'Molada';
+      }
+    }
+  }
+
+  function tick(){
+    var now = Date.now();
+    var liveStudy = studyMs, liveBreak = breakMs;
+    if(status === 'studying') liveStudy += (now - phaseStartTs);
+    if(status === 'break') liveBreak += (now - phaseStartTs);
+    document.getElementById('timer-main').textContent = fmtHMS(status === 'break' ? liveBreak : liveStudy);
+  }
+  function startTicking(){
+    if(tickHandle) clearInterval(tickHandle);
+    tickHandle = setInterval(tick, 1000);
+    tick();
+  }
+  function stopTicking(){ if(tickHandle){ clearInterval(tickHandle); tickHandle = null; } }
+
+  document.getElementById('start-btn').onclick = function(){
+    if(!selectedCourseId){
+      if(courses.length === 0){ document.getElementById('new-course').focus(); return; }
+      selectedCourseId = courses[0].id;
+      renderCourses();
+    }
+    status = 'studying';
+    studyMs = 0; breakMs = 0;
+    phaseStartTs = Date.now();
+    setButtons();
+    startTicking();
+    saveActive();
+  };
+
+  document.getElementById('break-btn').onclick = function(){
+    var now = Date.now();
+    if(status === 'studying'){ studyMs += (now - phaseStartTs); status = 'break'; }
+    else { breakMs += (now - phaseStartTs); status = 'studying'; }
+    phaseStartTs = now;
+    setButtons();
+    saveActive();
+  };
+
+  document.getElementById('stop-btn').onclick = function(){
+    var now = Date.now();
+    if(status === 'studying') studyMs += (now - phaseStartTs);
+    else if(status === 'break') breakMs += (now - phaseStartTs);
+    stopTicking();
+    if(studyMs > 1000 || breakMs > 1000){
+      sessions.push({ id: uid(), courseId: selectedCourseId, date: todayStr(), studyMs: studyMs, breakMs: breakMs, endedAt: now });
+      saveSessions();
+    }
+    status = 'idle';
+    studyMs = 0; breakMs = 0; phaseStartTs = null;
+    document.getElementById('timer-main').textContent = '00:00:00';
+    setButtons();
+    saveActive();
+    renderAll();
+    pushRemote();
+  };
+
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.onclick = function(){
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      breakdownRange = tab.getAttribute('data-range');
+      renderBreakdown();
+    };
+  });
+
+  function inRange(dateStr, range){
+    var today = todayStr();
+    if(range === 'today') return dateStr === today;
+    var d = new Date(dateStr + 'T00:00:00');
+    var weekAgo = new Date(new Date().toDateString());
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    return d >= weekAgo;
+  }
+
+  function renderBreakdown(){
+    var list = document.getElementById('breakdown-list');
+    list.innerHTML = '';
+    var byCourse = {};
+    sessions.forEach(function(s){
+      if(!inRange(s.date, breakdownRange)) return;
+      if(!byCourse[s.courseId]) byCourse[s.courseId] = { studyMs: 0, breakMs: 0 };
+      byCourse[s.courseId].studyMs += s.studyMs;
+      byCourse[s.courseId].breakMs += s.breakMs;
+    });
+    var ids = Object.keys(byCourse).sort(function(a,b){ return byCourse[b].studyMs - byCourse[a].studyMs; });
+    if(ids.length === 0){
+      list.innerHTML = '<p class="empty">' + (breakdownRange === 'today' ? 'Bugün henüz kayıt yok.' : 'Bu hafta henüz kayıt yok.') + '</p>';
+      return;
+    }
+    ids.forEach(function(cid){
+      var row = document.createElement('div');
+      row.className = 'breakdown-row';
+      var left = document.createElement('div');
+      left.className = 'breakdown-left';
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.color = courseColor(cid);
+      var name = document.createElement('span');
+      name.textContent = courseName(cid);
+      left.appendChild(dot);
+      left.appendChild(name);
+      var right = document.createElement('div');
+      right.className = 'breakdown-times';
+      var d = byCourse[cid];
+      right.innerHTML =
+        '<span class="t-study"><i class="ti ti-book" style="font-size:12px;"></i> ' + fmtDuration(d.studyMs) + '</span>' +
+        (d.breakMs > 30000 ? '<span class="t-break"><i class="ti ti-coffee" style="font-size:12px;"></i> ' + fmtDuration(d.breakMs) + '</span>' : '');
+      row.appendChild(left);
+      row.appendChild(right);
+      list.appendChild(row);
+    });
+  }
+
+  function renderAll(){
+    var today = todayStr();
+    var now = new Date();
+    var weekAgo = new Date(now.toDateString());
+    weekAgo.setDate(weekAgo.getDate() - 6);
+
+    var todayMs = 0, weekMs = 0;
+    var byCourseAll = {};
+    var dayTotals = {};
+
+    sessions.forEach(function(s){
+      byCourseAll[s.courseId] = (byCourseAll[s.courseId] || 0) + s.studyMs;
+      dayTotals[s.date] = (dayTotals[s.date] || 0) + s.studyMs;
+      if(s.date === today) todayMs += s.studyMs;
+      var sd = new Date(s.date + 'T00:00:00');
+      if(sd >= weekAgo) weekMs += s.studyMs;
+    });
+
+    document.getElementById('today-total').textContent = fmtDuration(todayMs);
+    document.getElementById('week-total').textContent = fmtDuration(weekMs);
+    document.getElementById('session-count').textContent = sessions.length;
+
+    renderBreakdown();
+
+    var barsWrap = document.getElementById('course-bars');
+    barsWrap.innerHTML = '';
+    var entries = Object.keys(byCourseAll).map(function(cid){ return { cid: cid, ms: byCourseAll[cid] }; }).sort(function(a,b){ return b.ms - a.ms; });
+    if(entries.length === 0){
+      barsWrap.innerHTML = '<p class="empty">Henüz kayıtlı oturum yok.</p>';
+    } else {
+      var max = entries[0].ms || 1;
+      entries.forEach(function(e){
+        var row = document.createElement('div');
+        row.className = 'bar-row';
+        var top = document.createElement('div');
+        top.className = 'bar-top';
+        top.innerHTML = '<span>' + courseName(e.cid) + '</span><span class="time">' + fmtDuration(e.ms) + '</span>';
+        var track = document.createElement('div');
+        track.className = 'track';
+        var fill = document.createElement('div');
+        fill.className = 'fill';
+        fill.style.width = Math.max(4, (e.ms / max * 100)) + '%';
+        fill.style.background = courseColor(e.cid);
+        track.appendChild(fill);
+        row.appendChild(top);
+        row.appendChild(track);
+        barsWrap.appendChild(row);
+      });
+    }
+
+    var heat = document.getElementById('heatmap');
+    heat.innerHTML = '';
+    var days = [];
+    for(var i = 69; i >= 0; i--){ days.push(todayStr(new Date(now.getTime() - i*86400000))); }
+    var weeks = [];
+    for(var w = 0; w < days.length; w += 7) weeks.push(days.slice(w, w+7));
+    weeks.forEach(function(week){
+      var col = document.createElement('div');
+      col.className = 'heat-col';
+      week.forEach(function(dateStr){
+        var ms = dayTotals[dateStr] || 0;
+        var mins = ms / 60000;
+        var alpha = mins <= 0 ? 0 : mins < 30 ? 0.2 : mins < 60 ? 0.4 : mins < 120 ? 0.65 : 1;
+        var cell = document.createElement('div');
+        cell.className = 'heat-cell';
+        if(alpha > 0) cell.style.background = 'rgba(45,212,167,' + alpha + ')';
+        cell.title = dateStr + ' — ' + fmtDuration(ms);
+        col.appendChild(cell);
+      });
+      heat.appendChild(col);
+    });
+
+    var hist = document.getElementById('history');
+    hist.innerHTML = '';
+    var recent = sessions.slice().sort(function(a,b){ return b.endedAt - a.endedAt; }).slice(0, 8);
+    if(recent.length === 0){
+      hist.innerHTML = '<p class="empty">Bir oturum tamamladığında burada görünecek.</p>';
+    } else {
+      recent.forEach(function(s){
+        var row = document.createElement('div');
+        row.className = 'hist-row';
+        var left = document.createElement('div');
+        left.className = 'hist-left';
+        left.innerHTML = '<span class="dot" style="color:' + courseColor(s.courseId) + '"></span><span>' + courseName(s.courseId) + ' · ' + s.date + '</span>';
+        var right = document.createElement('div');
+        right.className = 'hist-right';
+        right.innerHTML = '<span class="t-study">' + fmtDuration(s.studyMs) + '</span>' + (s.breakMs > 30000 ? '<span class="t-break">+' + fmtDuration(s.breakMs) + ' mola</span>' : '');
+        row.appendChild(left);
+        row.appendChild(right);
+        hist.appendChild(row);
+      });
+    }
+  }
+
+  initFirebase();
+})();
+</script>
+</body>
+</html>
