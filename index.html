@@ -24,6 +24,16 @@
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
     --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Consolas, monospace;
   }
+  [data-theme="light"]{
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-2: #EEF0F4;
+    --border: #E1E4EA;
+    --border-strong: #C7CCD6;
+    --text-primary: #1B1F27;
+    --text-secondary: #5C6478;
+    --text-muted: #8B93A6;
+  }
   *{ box-sizing: border-box; }
   body{
     margin:0;
@@ -99,12 +109,25 @@
   .divider{ display:flex; align-items:center; gap:10px; margin:16px 0; font-size:12px; color: var(--text-muted); }
   .divider::before, .divider::after{ content:''; flex:1; height:1px; background: var(--border); }
   .google-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .icon-btn{
+    width:38px; height:38px; padding:0; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; overflow:hidden; flex-shrink:0;
+  }
+  #profile-toggle-btn{ font-weight:600; font-size:14px; background: var(--surface-2); color: var(--study); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="prompt">~/ders-takip $ durum</div>
-  <h1>Ders <span>Takip</span></h1>
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+    <h1 style="margin:0;">Ders <span>Takip</span></h1>
+    <div id="header-icons" style="display:none; gap:8px;">
+      <button class="icon-btn" id="theme-toggle-btn" title="Tema"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><i class="ti ti-trophy"></i></button>
+      <button class="icon-btn" id="profile-toggle-btn" title="Hesabım"></button>
+    </div>
+  </div>
 
   <div class="card" id="auth-card">
     <div id="auth-loading"><p class="empty">Yükleniyor…</p></div>
@@ -126,23 +149,32 @@
       </button>
     </div>
 
-    <div id="auth-logged-in" style="display:none;">
-      <div class="sync-status">
-        <span><span class="sync-dot on"></span><span id="auth-email-label"></span></span>
-        <button id="auth-logout-btn" style="padding:6px 12px; font-size:12px;">Çıkış yap</button>
-      </div>
-    </div>
   </div>
 
   <div id="app-content" style="display:none;">
-    <div class="card">
-      <div style="display:flex; align-items:center; gap:14px;">
-        <div id="profile-avatar" style="width:48px; height:48px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:18px; overflow:hidden; flex-shrink:0;"></div>
+    <div class="card" id="profile-panel" style="display:none;">
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+        <div id="profile-avatar" style="width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; overflow:hidden; flex-shrink:0;"></div>
         <div>
-          <p style="margin:0; font-weight:600;" id="profile-name"></p>
+          <p style="margin:0; font-weight:600;" id="profile-email"></p>
           <p style="margin:0; font-size:12px; color:var(--text-secondary);" id="profile-meta"></p>
         </div>
       </div>
+      <p class="section-label" style="margin-bottom:8px;">Görünen isim</p>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <input type="text" id="profile-name-input" placeholder="İsmin" style="flex:1;">
+        <button class="primary" id="profile-name-save-btn">Kaydet</button>
+      </div>
+      <p class="auth-error" id="profile-error"></p>
+      <button id="profile-logout-btn" style="width:100%;"><i class="ti ti-logout"></i> Çıkış yap</button>
+    </div>
+
+    <div class="card" id="leaderboard-panel" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <p class="section-label" style="margin:0;"><i class="ti ti-trophy" style="vertical-align:-2px;"></i> Liderlik tablosu (tüm kullanıcılar)</p>
+        <button id="leaderboard-refresh-btn" style="padding:5px 10px; font-size:12px;">Yenile</button>
+      </div>
+      <div id="leaderboard-list"><p class="empty">Yükleniyor…</p></div>
     </div>
 
     <div class="card">
@@ -195,20 +227,28 @@
       <div id="history"></div>
     </div>
 
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <p class="section-label" style="margin:0;"><i class="ti ti-trophy" style="vertical-align:-2px;"></i> Liderlik tablosu (tüm kullanıcılar)</p>
-        <button id="leaderboard-refresh-btn" style="padding:5px 10px; font-size:12px;">Yenile</button>
-      </div>
-      <div id="leaderboard-list"><p class="empty">Yükleniyor…</p></div>
-    </div>
-
     <div class="footer-note">Hesabına giriş yaptığın her cihazda aynı veriler otomatik görünür.</div>
   </div>
 </div>
 
 <script>
 (function(){
+  var THEME_KEY = 'derstakip_theme';
+  var savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+  if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  function applyThemeIcon(){
+    var icon = document.querySelector('#theme-toggle-btn i');
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    icon.className = isLight ? 'ti ti-sun' : 'ti ti-moon';
+  }
+  document.getElementById('theme-toggle-btn').onclick = function(){
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if(isLight){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem(THEME_KEY, 'dark'); }
+    else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem(THEME_KEY, 'light'); }
+    applyThemeIcon();
+  };
+  applyThemeIcon();
+
   var PALETTE = ['#5B8DEF','#2DD4A7','#E2725B','#D6679B','#9B8AFB','#E0B84E','#7FBD5B','#4FC3E0'];
   var LS_COURSES = 'derstakip_courses';
   var LS_SESSIONS = 'derstakip_sessions';
@@ -297,32 +337,78 @@
     fbApp = appMod.initializeApp(DEFAULT_FIREBASE_CONFIG);
     fbAuth = fbAuthMod.getAuth(fbApp);
     fbDb = fbFsMod.getFirestore(fbApp);
+    try{ await fbAuthMod.setPersistence(fbAuth, fbAuthMod.browserLocalPersistence); } catch(e){}
     fbAuthMod.onAuthStateChanged(fbAuth, onAuthChanged);
+  }
+
+  function setAvatarEl(el, size){
+    if(currentPhotoURL){
+      el.innerHTML = '<img src="' + currentPhotoURL + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      el.textContent = currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : '?';
+      el.style.color = 'var(--study)';
+    }
   }
 
   function renderProfile(user){
     currentDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Kullanıcı');
     currentPhotoURL = user.photoURL || null;
-    var avatarEl = document.getElementById('profile-avatar');
-    if(currentPhotoURL){
-      avatarEl.innerHTML = '<img src="' + currentPhotoURL + '" style="width:100%;height:100%;object-fit:cover;">';
-    } else {
-      avatarEl.textContent = currentDisplayName.charAt(0).toUpperCase();
-      avatarEl.style.color = 'var(--study)';
-    }
-    document.getElementById('profile-name').textContent = currentDisplayName;
+    setAvatarEl(document.getElementById('profile-avatar'));
+    setAvatarEl(document.getElementById('profile-toggle-btn'));
+    document.getElementById('profile-email').textContent = currentDisplayName;
+    document.getElementById('profile-name-input').value = currentDisplayName;
     var joined = (user.metadata && user.metadata.creationTime) ? new Date(user.metadata.creationTime) : null;
     document.getElementById('profile-meta').textContent = user.email + (joined ? ' · Üyelik: ' + joined.toLocaleDateString('tr-TR') : '');
   }
+
+  function closeAllPanels(){
+    document.getElementById('profile-panel').style.display = 'none';
+    document.getElementById('leaderboard-panel').style.display = 'none';
+  }
+  document.getElementById('profile-toggle-btn').onclick = function(){
+    var panel = document.getElementById('profile-panel');
+    var opening = panel.style.display === 'none';
+    closeAllPanels();
+    if(opening) panel.style.display = '';
+  };
+  document.getElementById('leaderboard-toggle-btn').onclick = function(){
+    var panel = document.getElementById('leaderboard-panel');
+    var opening = panel.style.display === 'none';
+    closeAllPanels();
+    if(opening){ panel.style.display = ''; loadLeaderboard(); }
+  };
+
+  document.getElementById('profile-name-save-btn').onclick = async function(){
+    var newName = document.getElementById('profile-name-input').value.trim();
+    var errEl = document.getElementById('profile-error');
+    errEl.style.color = 'var(--danger)';
+    if(!newName){ errEl.textContent = 'İsim boş olamaz.'; return; }
+    try{
+      await initFirebase();
+      await fbAuthMod.updateProfile(fbAuth.currentUser, { displayName: newName });
+      currentDisplayName = newName;
+      setAvatarEl(document.getElementById('profile-avatar'));
+      setAvatarEl(document.getElementById('profile-toggle-btn'));
+      document.getElementById('profile-email').textContent = currentDisplayName;
+      errEl.style.color = 'var(--study)';
+      errEl.textContent = 'Kaydedildi.';
+      pushRemote();
+    } catch(e){
+      errEl.textContent = translateAuthError(e.code);
+    }
+  };
+  document.getElementById('profile-logout-btn').onclick = async function(){
+    if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
+    await fbAuthMod.signOut(fbAuth);
+  };
 
   function onAuthChanged(user){
     document.getElementById('auth-loading').style.display = 'none';
     if(user){
       currentUid = user.uid;
       currentEmail = user.email;
-      document.getElementById('auth-form-wrap').style.display = 'none';
-      document.getElementById('auth-logged-in').style.display = '';
-      document.getElementById('auth-email-label').textContent = currentEmail;
+      document.getElementById('auth-card').style.display = 'none';
+      document.getElementById('header-icons').style.display = 'flex';
       document.getElementById('app-content').style.display = '';
       renderProfile(user);
       loadLocalForUser();
@@ -331,13 +417,14 @@
       if(status !== 'idle') startTicking();
       renderAll();
       pullAndSubscribeFirestore();
-      loadLeaderboard();
     } else {
       currentUid = null;
       if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
       stopTicking();
+      closeAllPanels();
       document.getElementById('app-content').style.display = 'none';
-      document.getElementById('auth-logged-in').style.display = 'none';
+      document.getElementById('header-icons').style.display = 'none';
+      document.getElementById('auth-card').style.display = '';
       document.getElementById('auth-form-wrap').style.display = '';
     }
   }
@@ -447,11 +534,6 @@
   document.getElementById('auth-password').addEventListener('keydown', function(e){
     if(e.key === 'Enter') submitAuth();
   });
-
-  document.getElementById('auth-logout-btn').onclick = async function(){
-    if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
-    await fbAuthMod.signOut(fbAuth);
-  };
 
   document.getElementById('auth-google-btn').onclick = async function(){
     var errEl = document.getElementById('auth-error');
@@ -566,6 +648,10 @@
     tick();
   }
   function stopTicking(){ if(tickHandle){ clearInterval(tickHandle); tickHandle = null; } }
+
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && status !== 'idle') tick();
+  });
 
   document.getElementById('start-btn').onclick = function(){
     if(!selectedCourseId){
