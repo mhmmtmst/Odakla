@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ders Takip</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
 <style>
   :root{
     --bg: #0B0E14;
@@ -123,8 +122,8 @@
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
     <h1 style="margin:0;">Ders <span>Takip</span></h1>
     <div id="header-icons" style="display:none; gap:8px;">
-      <button class="icon-btn" id="theme-toggle-btn" title="Tema"><i class="ti ti-moon"></i></button>
-      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><i class="ti ti-trophy"></i></button>
+      <button class="icon-btn" id="theme-toggle-btn" title="Tema">🌙</button>
+      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu">🏆</button>
       <button class="icon-btn" id="profile-toggle-btn" title="Hesabım"></button>
     </div>
   </div>
@@ -165,13 +164,32 @@
         <input type="text" id="profile-name-input" placeholder="İsmin" style="flex:1;">
         <button class="primary" id="profile-name-save-btn">Kaydet</button>
       </div>
+
+      <div id="profile-google-note" class="sync-sub" style="display:none; margin-bottom:14px;">Google hesabıyla giriş yaptın, e-posta ve şifreni Google hesabından değiştirebilirsin.</div>
+
+      <div id="profile-email-section">
+        <p class="section-label" style="margin-bottom:8px;">E-posta</p>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <input type="email" id="profile-email-input" placeholder="yeni e-posta adresi" style="flex:1;">
+          <button id="profile-email-save-btn">Güncelle</button>
+        </div>
+      </div>
+
+      <div id="profile-password-section">
+        <p class="section-label" style="margin-bottom:8px;">Şifre</p>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <input type="password" id="profile-password-input" placeholder="yeni şifre (en az 6 karakter)" style="flex:1;">
+          <button id="profile-password-save-btn">Güncelle</button>
+        </div>
+      </div>
+
       <p class="auth-error" id="profile-error"></p>
-      <button id="profile-logout-btn" style="width:100%;"><i class="ti ti-logout"></i> Çıkış yap</button>
+      <button id="profile-logout-btn" style="width:100%;">⎋ Çıkış yap</button>
     </div>
 
     <div class="card" id="leaderboard-panel" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <p class="section-label" style="margin:0;"><i class="ti ti-trophy" style="vertical-align:-2px;"></i> Liderlik tablosu (tüm kullanıcılar)</p>
+        <p class="section-label" style="margin:0;">🏆 Liderlik tablosu (tüm kullanıcılar)</p>
         <button id="leaderboard-refresh-btn" style="padding:5px 10px; font-size:12px;">Yenile</button>
       </div>
       <div id="leaderboard-list"><p class="empty">Yükleniyor…</p></div>
@@ -188,13 +206,13 @@
 
       <div class="add-row">
         <input type="text" id="new-course" placeholder="Yeni ders adı (örn. React Kursu)">
-        <button id="add-course-btn"><i class="ti ti-plus"></i> Ekle</button>
+        <button id="add-course-btn">+ Ekle</button>
       </div>
 
       <div class="btn-row">
-        <button class="primary" id="start-btn"><i class="ti ti-player-play"></i> Başlat</button>
+        <button class="primary" id="start-btn">▶ Başlat</button>
         <button id="break-btn" style="display:none;"></button>
-        <button id="stop-btn" style="display:none;"><i class="ti ti-square"></i> Bitir</button>
+        <button id="stop-btn" style="display:none;">⏹ Bitir</button>
       </div>
     </div>
 
@@ -237,9 +255,9 @@
   var savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
   if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
   function applyThemeIcon(){
-    var icon = document.querySelector('#theme-toggle-btn i');
+    var btn = document.getElementById('theme-toggle-btn');
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    icon.className = isLight ? 'ti ti-sun' : 'ti ti-moon';
+    btn.textContent = isLight ? '☀️' : '🌙';
   }
   document.getElementById('theme-toggle-btn').onclick = function(){
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -324,7 +342,8 @@
       'auth/too-many-requests': 'Çok fazla deneme yapıldı, biraz sonra tekrar dene.',
       'auth/popup-closed-by-user': 'Google penceresi kapatıldı, tekrar dener misin?',
       'auth/unauthorized-domain': 'Bu site adresi Firebase\'de henüz yetkili değil.',
-      'auth/cancelled-popup-request': 'Önceki pencere hâlâ açık, tekrar dener misin?'
+      'auth/cancelled-popup-request': 'Önceki pencere hâlâ açık, tekrar dener misin?',
+      'auth/requires-recent-login': 'Güvenlik nedeniyle bu işlem için tekrar giriş yapman gerekiyor. Çıkış yapıp tekrar giriş yap, sonra dener misin?'
     };
     return map[code] || 'Bir hata oluştu, tekrar dener misin?';
   }
@@ -359,6 +378,12 @@
     document.getElementById('profile-name-input').value = currentDisplayName;
     var joined = (user.metadata && user.metadata.creationTime) ? new Date(user.metadata.creationTime) : null;
     document.getElementById('profile-meta').textContent = user.email + (joined ? ' · Üyelik: ' + joined.toLocaleDateString('tr-TR') : '');
+    var hasPasswordProvider = user.providerData.some(function(p){ return p.providerId === 'password'; });
+    document.getElementById('profile-email-section').style.display = hasPasswordProvider ? '' : 'none';
+    document.getElementById('profile-password-section').style.display = hasPasswordProvider ? '' : 'none';
+    document.getElementById('profile-google-note').style.display = hasPasswordProvider ? 'none' : '';
+    document.getElementById('profile-email-input').value = '';
+    document.getElementById('profile-password-input').value = '';
   }
 
   function closeAllPanels(){
@@ -397,6 +422,41 @@
       errEl.textContent = translateAuthError(e.code);
     }
   };
+  document.getElementById('profile-email-save-btn').onclick = async function(){
+    var newEmail = document.getElementById('profile-email-input').value.trim();
+    var errEl = document.getElementById('profile-error');
+    errEl.style.color = 'var(--danger)';
+    if(!newEmail){ errEl.textContent = 'Yeni e-posta gerekli.'; return; }
+    try{
+      await initFirebase();
+      await fbAuthMod.updateEmail(fbAuth.currentUser, newEmail);
+      currentEmail = newEmail;
+      var joined = (fbAuth.currentUser.metadata && fbAuth.currentUser.metadata.creationTime) ? new Date(fbAuth.currentUser.metadata.creationTime) : null;
+      document.getElementById('profile-meta').textContent = newEmail + (joined ? ' · Üyelik: ' + joined.toLocaleDateString('tr-TR') : '');
+      document.getElementById('profile-email-input').value = '';
+      errEl.style.color = 'var(--study)';
+      errEl.textContent = 'E-posta güncellendi.';
+    } catch(e){
+      errEl.textContent = translateAuthError(e.code);
+    }
+  };
+
+  document.getElementById('profile-password-save-btn').onclick = async function(){
+    var newPass = document.getElementById('profile-password-input').value;
+    var errEl = document.getElementById('profile-error');
+    errEl.style.color = 'var(--danger)';
+    if(!newPass || newPass.length < 6){ errEl.textContent = 'Şifre en az 6 karakter olmalı.'; return; }
+    try{
+      await initFirebase();
+      await fbAuthMod.updatePassword(fbAuth.currentUser, newPass);
+      document.getElementById('profile-password-input').value = '';
+      errEl.style.color = 'var(--study)';
+      errEl.textContent = 'Şifre güncellendi.';
+    } catch(e){
+      errEl.textContent = translateAuthError(e.code);
+    }
+  };
+
   document.getElementById('profile-logout-btn').onclick = async function(){
     if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
     await fbAuthMod.signOut(fbAuth);
@@ -623,12 +683,12 @@
       stopBtn.style.display = '';
       if(status === 'studying'){
         breakBtn.className = 'warn';
-        breakBtn.innerHTML = '<i class="ti ti-player-pause"></i> Mola ver';
+        breakBtn.innerHTML = '⏸ Mola ver';
         badge.className = 'phase-badge studying';
         phaseText.textContent = 'Çalışıyor';
       } else {
         breakBtn.className = 'primary';
-        breakBtn.innerHTML = '<i class="ti ti-player-play"></i> Devam et';
+        breakBtn.innerHTML = '▶ Devam et';
         badge.className = 'phase-badge break';
         phaseText.textContent = 'Molada';
       }
@@ -743,8 +803,8 @@
       right.className = 'breakdown-times';
       var d = byCourse[cid];
       right.innerHTML =
-        '<span class="t-study"><i class="ti ti-book" style="font-size:12px;"></i> ' + fmtDuration(d.studyMs) + '</span>' +
-        (d.breakMs > 30000 ? '<span class="t-break"><i class="ti ti-coffee" style="font-size:12px;"></i> ' + fmtDuration(d.breakMs) + '</span>' : '');
+        '<span class="t-study">📘 ' + fmtDuration(d.studyMs) + '</span>' +
+        (d.breakMs > 30000 ? '<span class="t-break">☕ ' + fmtDuration(d.breakMs) + '</span>' : '');
       row.appendChild(left);
       row.appendChild(right);
       list.appendChild(row);
