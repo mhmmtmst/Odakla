@@ -214,6 +214,7 @@
 
         <div id="profile-email-section">
           <p class="section-label" style="margin-bottom:8px;">E-posta</p>
+          <p id="profile-verify-status" style="font-size:12px; margin:0 0 10px;"></p>
           <div style="display:flex; gap:8px; margin-bottom:14px;">
             <input type="email" id="profile-email-input" placeholder="yeni e-posta adresi" style="flex:1;">
             <button id="profile-email-save-btn">Güncelle</button>
@@ -273,6 +274,15 @@
   </div>
 
   <div id="app-content" style="display:none;">
+    <div class="card" id="verify-banner" style="display:none; border-color: var(--break); background: var(--break-dim);">
+      <p style="margin:0 0 10px; font-size:13px;">📩 E-posta adresini henüz doğrulamadın. Kutunu (spam dahil) kontrol et.</p>
+      <div style="display:flex; gap:8px;">
+        <button id="verify-send-btn" style="padding:6px 12px; font-size:12px;">Doğrulama e-postası gönder</button>
+        <button id="verify-recheck-btn" style="padding:6px 12px; font-size:12px;">Doğruladım, kontrol et</button>
+      </div>
+      <p class="sync-sub" id="verify-status" style="margin-top:8px;"></p>
+    </div>
+
     <div class="card">
       <div class="timer-row">
         <div class="phase-badge" id="phase-badge"><span class="dot"></span><span id="phase-text">Hazır</span></div>
@@ -487,6 +497,22 @@
     document.getElementById('profile-email-input').value = '';
     document.getElementById('profile-password-input').value = '';
     document.getElementById('profile-password-link-input').value = '';
+    renderVerifyStatus(user, hasPasswordProvider);
+  }
+
+  function renderVerifyStatus(user, hasPasswordProvider){
+    var needsVerify = hasPasswordProvider && !user.emailVerified;
+    document.getElementById('verify-banner').style.display = needsVerify ? '' : 'none';
+    var statusEl = document.getElementById('profile-verify-status');
+    if(!hasPasswordProvider){
+      statusEl.textContent = '';
+    } else if(user.emailVerified){
+      statusEl.textContent = '✓ E-posta doğrulanmış';
+      statusEl.style.color = 'var(--study)';
+    } else {
+      statusEl.textContent = '⚠ E-posta doğrulanmamış';
+      statusEl.style.color = 'var(--break)';
+    }
   }
 
   function closeAllPanels(){
@@ -494,6 +520,38 @@
     document.getElementById('profile-modal-overlay').style.display = 'none';
     document.getElementById('achievements-modal-overlay').style.display = 'none';
   }
+
+  document.getElementById('verify-send-btn').onclick = async function(){
+    var statusEl = document.getElementById('verify-status');
+    statusEl.style.color = 'var(--text-secondary)';
+    try{
+      await initFirebase();
+      await fbAuthMod.sendEmailVerification(fbAuth.currentUser);
+      statusEl.style.color = 'var(--study)';
+      statusEl.textContent = 'Gönderildi! Gelen kutunu (ve spam klasörünü) kontrol et.';
+    } catch(e){
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = translateAuthError(e.code);
+    }
+  };
+  document.getElementById('verify-recheck-btn').onclick = async function(){
+    var statusEl = document.getElementById('verify-status');
+    try{
+      await initFirebase();
+      await fbAuth.currentUser.reload();
+      if(fbAuth.currentUser.emailVerified){
+        statusEl.style.color = 'var(--study)';
+        statusEl.textContent = 'Doğrulandı, teşekkürler!';
+        renderProfile(fbAuth.currentUser);
+      } else {
+        statusEl.style.color = 'var(--break)';
+        statusEl.textContent = 'Henüz doğrulanmamış görünüyor, mail linkine tıkladın mı?';
+      }
+    } catch(e){
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = translateAuthError(e.code);
+    }
+  };
   document.getElementById('achievements-toggle-btn').onclick = function(){
     closeAllPanels();
     document.getElementById('achievements-modal-overlay').style.display = 'block';
@@ -959,7 +1017,8 @@
     try{
       await initFirebase();
       if(authMode === 'signup'){
-        await fbAuthMod.createUserWithEmailAndPassword(fbAuth, email, pass);
+        var cred = await fbAuthMod.createUserWithEmailAndPassword(fbAuth, email, pass);
+        try{ await fbAuthMod.sendEmailVerification(cred.user); } catch(e2){}
       } else {
         await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, pass);
       }
