@@ -501,13 +501,11 @@
   }
 
   function renderVerifyStatus(user, hasPasswordProvider){
-    var needsVerify = hasPasswordProvider && !user.emailVerified;
+    var needsVerify = !user.emailVerified;
     document.getElementById('verify-banner').style.display = needsVerify ? '' : 'none';
     var statusEl = document.getElementById('profile-verify-status');
-    if(!hasPasswordProvider){
-      statusEl.textContent = '';
-    } else if(user.emailVerified){
-      statusEl.textContent = '✓ E-posta doğrulanmış';
+    if(user.emailVerified){
+      statusEl.textContent = '✓ E-posta doğrulanmış' + (hasPasswordProvider ? '' : ' (Google üzerinden)');
       statusEl.style.color = 'var(--study)';
     } else {
       statusEl.textContent = '⚠ E-posta doğrulanmamış';
