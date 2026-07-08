@@ -169,7 +169,7 @@
         </div>
       </div>
 
-      <div class="tabs">
+      <div class="tabs" id="settings-tabs">
         <div class="tab active" data-settings-tab="info">Hesap bilgileri</div>
         <div class="tab" data-settings-tab="security">Şifre ve güvenlik</div>
         <div class="tab" data-settings-tab="danger">Hesap durumu</div>
@@ -256,7 +256,7 @@
     </div>
 
     <div class="card">
-      <div class="tabs">
+      <div class="tabs" id="breakdown-tabs">
         <div class="tab active" data-range="today">Bugün</div>
         <div class="tab" data-range="week">Bu hafta</div>
       </div>
@@ -439,9 +439,9 @@
   document.getElementById('profile-modal-overlay').addEventListener('click', function(e){
     if(e.target.id === 'profile-modal-overlay') document.getElementById('profile-modal-overlay').style.display = 'none';
   });
-  document.querySelectorAll('[data-settings-tab]').forEach(function(tabEl){
+  document.querySelectorAll('#settings-tabs [data-settings-tab]').forEach(function(tabEl){
     tabEl.onclick = function(){
-      document.querySelectorAll('[data-settings-tab]').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('#settings-tabs [data-settings-tab]').forEach(function(t){ t.classList.remove('active'); });
       tabEl.classList.add('active');
       var target = tabEl.getAttribute('data-settings-tab');
       document.getElementById('settings-tab-info').style.display = target === 'info' ? '' : 'none';
@@ -957,9 +957,9 @@
     pushRemote();
   };
 
-  document.querySelectorAll('.tab').forEach(function(tab){
+  document.querySelectorAll('#breakdown-tabs .tab').forEach(function(tab){
     tab.onclick = function(){
-      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('#breakdown-tabs .tab').forEach(function(t){ t.classList.remove('active'); });
       tab.classList.add('active');
       breakdownRange = tab.getAttribute('data-range');
       renderBreakdown();
