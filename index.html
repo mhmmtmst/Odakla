@@ -105,6 +105,26 @@
   .hist-row:last-child{ border-bottom:none; }
   .hist-left{ display:flex; align-items:center; gap:9px; }
   .hist-right{ font-family: var(--font-mono); font-size:12px; color: var(--text-secondary); display:flex; gap:10px; }
+  .badge-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+  .badge-card{ background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align:center; transition: transform .15s ease; }
+  .badge-card.unlocked{ border-color: var(--study); box-shadow: var(--glow-soft); }
+  .badge-icon-circle{ width:50px; height:50px; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:24px; background: var(--surface); }
+  .badge-icon-circle.unlocked{ background: var(--study-dim); box-shadow: 0 0 16px rgba(255,229,0,0.4), inset 0 0 0 2px var(--study); }
+  .badge-icon-circle.locked{ filter: grayscale(1); opacity:0.45; }
+  .badge-title{ font-weight:700; font-size:12.5px; margin:0 0 3px; }
+  .badge-title.locked{ color: var(--text-muted); }
+  .badge-desc{ font-size:10.5px; color: var(--text-muted); margin:0 0 8px; line-height:1.3; }
+  .badge-progress-track{ height:4px; background: var(--surface); border-radius:999px; overflow:hidden; }
+  .badge-progress-fill{ height:100%; background: var(--study); border-radius:999px; }
+  .badge-progress-label{ font-size:9.5px; color: var(--text-muted); margin-top:4px; font-family: var(--font-mono); }
+  .week-chart-row{ display:flex; align-items:flex-end; gap:10px; height:150px; padding-top:22px; }
+  .week-chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .week-chart-value{ font-size:10px; color: var(--text-secondary); margin-bottom:5px; font-family: var(--font-mono); white-space:nowrap; }
+  .week-chart-bar{ width:100%; max-width:30px; border-radius:9px 9px 4px 4px; background: var(--surface-2); transition: height .5s cubic-bezier(.34,1.56,.64,1); min-height:5px; }
+  .week-chart-bar.has-value{ background: linear-gradient(180deg, var(--study) 0%, rgba(255,229,0,0.45) 100%); box-shadow: var(--glow-soft); }
+  .week-chart-bar.is-today{ box-shadow: var(--glow-strong); }
+  .week-chart-label{ font-size:11px; color: var(--text-muted); margin-top:8px; }
+  .week-chart-label.is-today{ color: var(--study); font-weight:700; }
   .footer-note{ text-align:center; font-size:12px; color: var(--text-muted); margin-top: 28px; }
   ::-webkit-scrollbar{ height:6px; }
   ::-webkit-scrollbar-thumb{ background: var(--border-strong); border-radius:4px; }
@@ -317,10 +337,8 @@
     <div class="card">
       <p class="section-label">Son 10 hafta</p>
       <div class="heat-wrap" id="heatmap"></div>
-    </div>
 
-    <div class="card">
-      <p class="section-label">Son oturumlar</p>
+      <p class="section-label" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">Son oturumlar</p>
       <div id="history"></div>
     </div>
 
@@ -627,9 +645,11 @@
 
   function renderWeeklyChart(){
     var container = document.getElementById('weekly-chart');
+    container.className = 'week-chart-row';
     container.innerHTML = '';
     var labels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
     var now = new Date();
+    var todayDs = todayStr(now);
     var dow = now.getDay();
     var mondayOffset = dow === 0 ? 6 : dow - 1;
     var monday = new Date(now);
@@ -642,25 +662,27 @@
       var ds = todayStr(d);
       var ms = 0;
       sessions.forEach(function(s){ if(s.date === ds) ms += s.studyMs; });
-      totals.push(ms);
+      totals.push({ ms: ms, ds: ds });
       if(ms > max) max = ms;
     }
-    totals.forEach(function(ms, i){
-      var row = document.createElement('div');
-      row.className = 'bar-row';
-      var top = document.createElement('div');
-      top.className = 'bar-top';
-      top.innerHTML = '<span>' + labels[i] + '</span><span class="time">' + fmtDuration(ms) + '</span>';
-      var track = document.createElement('div');
-      track.className = 'track';
-      var fill = document.createElement('div');
-      fill.className = 'fill';
-      fill.style.width = Math.max(3, (ms / max * 100)) + '%';
-      fill.style.background = 'var(--study)';
-      track.appendChild(fill);
-      row.appendChild(top);
-      row.appendChild(track);
-      container.appendChild(row);
+    totals.forEach(function(t, i){
+      var isToday = t.ds === todayDs;
+      var col = document.createElement('div');
+      col.className = 'week-chart-col';
+      var value = document.createElement('div');
+      value.className = 'week-chart-value';
+      value.textContent = t.ms > 0 ? fmtDuration(t.ms) : '';
+      var bar = document.createElement('div');
+      bar.className = 'week-chart-bar' + (t.ms > 0 ? ' has-value' : '') + (isToday ? ' is-today' : '');
+      var pctHeight = Math.max(4, Math.round(t.ms / max * 100));
+      bar.style.height = (t.ms > 0 ? pctHeight : 4) + '%';
+      var label = document.createElement('div');
+      label.className = 'week-chart-label' + (isToday ? ' is-today' : '');
+      label.textContent = labels[i];
+      col.appendChild(value);
+      col.appendChild(bar);
+      col.appendChild(label);
+      container.appendChild(col);
     });
   }
 
@@ -669,34 +691,47 @@
     var streak = computeStreak();
     var goalMs = (weeklyGoalHours || 0) * 3600000;
     var haveWeekMs = weekTotalMs();
+
+    function timeBadge(icon, name, thresholdMs){
+      var pct = Math.min(100, Math.round(totalMs / thresholdMs * 100));
+      return { icon: icon, name: name, desc: 'Toplamda ' + fmtDuration(thresholdMs) + ' çalış', unlocked: totalMs >= thresholdMs, progress: pct, progressLabel: fmtDuration(Math.min(totalMs, thresholdMs)) + ' / ' + fmtDuration(thresholdMs) };
+    }
+    function streakBadge(icon, name, thresholdDays){
+      var pct = Math.min(100, Math.round(streak / thresholdDays * 100));
+      return { icon: icon, name: name, desc: thresholdDays + ' gün üst üste çalış', unlocked: streak >= thresholdDays, progress: pct, progressLabel: streak + ' / ' + thresholdDays + ' gün' };
+    }
+
     return [
-      { name: 'İlk Adım', desc: 'İlk oturumunu tamamla', unlocked: sessions.length >= 1 },
-      { name: '1 Saat', desc: 'Toplamda 1 saat çalış', unlocked: totalMs >= 3600000 },
-      { name: '10 Saat Kulübü', desc: 'Toplamda 10 saat çalış', unlocked: totalMs >= 36000000 },
-      { name: '50 Saat Kulübü', desc: 'Toplamda 50 saat çalış', unlocked: totalMs >= 180000000 },
-      { name: '100 Saat Kulübü', desc: 'Toplamda 100 saat çalış', unlocked: totalMs >= 360000000 },
-      { name: '3 Günlük Seri', desc: '3 gün üst üste çalış', unlocked: streak >= 3 },
-      { name: '7 Günlük Seri', desc: '7 gün üst üste çalış', unlocked: streak >= 7 },
-      { name: '30 Günlük Seri', desc: '30 gün üst üste çalış', unlocked: streak >= 30 },
-      { name: 'Çok Yönlü', desc: '3 farklı ders ekle', unlocked: courses.length >= 3 },
-      { name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', unlocked: goalMs > 0 && haveWeekMs >= goalMs }
+      { icon: '🚀', name: 'İlk Adım', desc: 'İlk oturumunu tamamla', unlocked: sessions.length >= 1, progress: Math.min(100, sessions.length * 100), progressLabel: sessions.length + ' / 1 oturum' },
+      timeBadge('⏱️', '1 Saat', 3600000),
+      timeBadge('⏳', '10 Saat Kulübü', 36000000),
+      timeBadge('💪', '50 Saat Kulübü', 180000000),
+      timeBadge('👑', '100 Saat Kulübü', 360000000),
+      streakBadge('🔥', '3 Günlük Seri', 3),
+      streakBadge('🔥', '7 Günlük Seri', 7),
+      streakBadge('🔥', '30 Günlük Seri', 30),
+      { icon: '🎨', name: 'Çok Yönlü', desc: '3 farklı ders ekle', unlocked: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
+      { icon: '🎯', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', unlocked: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' }
     ];
   }
 
   function renderAchievements(){
     var list = document.getElementById('achievements-list');
+    list.className = 'badge-grid';
     list.innerHTML = '';
     var badges = computeBadges();
     badges.forEach(function(b){
-      var row = document.createElement('div');
-      row.className = 'hist-row';
-      var left = document.createElement('div');
-      left.className = 'hist-left';
-      left.innerHTML = '<span style="font-size:18px;">' + (b.unlocked ? '🏅' : '🔒') + '</span><span>' +
-        '<div style="font-weight:600; color:' + (b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)') + ';">' + b.name + '</div>' +
-        '<div style="font-size:11px; color:var(--text-muted);">' + b.desc + '</div></span>';
-      row.appendChild(left);
-      list.appendChild(row);
+      var card = document.createElement('div');
+      card.className = 'badge-card' + (b.unlocked ? ' unlocked' : '');
+      var progressHtml = b.unlocked ? '' :
+        '<div class="badge-progress-track"><div class="badge-progress-fill" style="width:' + b.progress + '%;"></div></div>' +
+        '<div class="badge-progress-label">' + b.progressLabel + '</div>';
+      card.innerHTML =
+        '<div class="badge-icon-circle ' + (b.unlocked ? 'unlocked' : 'locked') + '">' + b.icon + '</div>' +
+        '<div class="badge-title' + (b.unlocked ? '' : ' locked') + '">' + b.name + '</div>' +
+        '<div class="badge-desc">' + b.desc + '</div>' +
+        progressHtml;
+      list.appendChild(card);
     });
   }
 
