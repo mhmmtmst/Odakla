@@ -152,8 +152,12 @@
     <h1 style="margin:0;">Ders <span>Takip</span></h1>
     <div id="header-icons" style="display:none; gap:8px;">
       <button class="icon-btn" id="theme-toggle-btn" title="Tema">🌙</button>
-      <button class="icon-btn" id="achievements-toggle-btn" title="Başarımlar">🎖️</button>
+      <button class="icon-btn" id="achievements-toggle-btn" title="Başarımlar" style="position:relative;">
+        🎖️
+        <span id="achievements-count-badge" style="display:none; position:absolute; top:-3px; right:-3px; background:var(--study); color:#100F08; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:999px; align-items:center; justify-content:center; padding:0 3px;"></span>
+      </button>
       <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu">🏆</button>
+      <button class="icon-btn" id="admin-toggle-btn" title="Yönetici Paneli" style="display:none;">🛡️</button>
       <button class="icon-btn" id="profile-toggle-btn" title="Hesabım"></button>
     </div>
   </div>
@@ -273,6 +277,20 @@
     </div>
   </div>
 
+  <div id="admin-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; overflow-y:auto; padding:32px 16px;">
+    <div class="card" style="max-width:560px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <p style="margin:0; font-weight:600; font-size:15px;">🛡️ Yönetici Paneli</p>
+        <button id="admin-close-btn" style="padding:5px 11px; font-size:13px;">✕</button>
+      </div>
+      <p class="sync-sub" style="margin-bottom:14px;">Buradan bir kullanıcının verisini ve liderlik kaydını silebilirsin. Not: bu, kullanıcının giriş hesabını silmez ya da girişini engellemez — sadece cihazına giriş yaptığında verileri sıfırdan başlar.</p>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        <button id="admin-refresh-btn" style="padding:5px 10px; font-size:12px;">Yenile</button>
+      </div>
+      <div id="admin-user-list"><p class="empty">Yükleniyor…</p></div>
+    </div>
+  </div>
+
   <div id="app-content" style="display:none;">
     <div class="card" id="verify-banner" style="display:none; border-color: var(--break); background: var(--break-dim);">
       <p style="margin:0 0 10px; font-size:13px;">📩 E-posta adresini henüz doğrulamadın. Kutunu (spam dahil) kontrol et.</p>
@@ -355,6 +373,8 @@
     <div class="footer-note">Hesabına giriş yaptığın her cihazda aynı veriler otomatik görünür.</div>
   </div>
 </div>
+
+<div id="badge-toast" style="display:none; position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(10px); opacity:0; transition:opacity .3s ease, transform .3s ease; background:var(--surface); border:1px solid var(--study); box-shadow:var(--glow-strong); border-radius:999px; padding:12px 22px; font-size:13px; font-weight:600; z-index:2000; white-space:nowrap;"></div>
 
 <script>
 (function(){
@@ -513,10 +533,75 @@
     }
   }
 
+  var ADMIN_EMAIL = 'mhmmtmesut@gmail.com';
+
   function closeAllPanels(){
     document.getElementById('leaderboard-modal-overlay').style.display = 'none';
     document.getElementById('profile-modal-overlay').style.display = 'none';
     document.getElementById('achievements-modal-overlay').style.display = 'none';
+    document.getElementById('admin-modal-overlay').style.display = 'none';
+  }
+
+  document.getElementById('admin-toggle-btn').onclick = function(){
+    closeAllPanels();
+    document.getElementById('admin-modal-overlay').style.display = 'block';
+    loadAdminUsers();
+  };
+  document.getElementById('admin-close-btn').onclick = function(){
+    document.getElementById('admin-modal-overlay').style.display = 'none';
+  };
+  document.getElementById('admin-modal-overlay').addEventListener('click', function(e){
+    if(e.target.id === 'admin-modal-overlay') document.getElementById('admin-modal-overlay').style.display = 'none';
+  });
+  document.getElementById('admin-refresh-btn').onclick = function(){ loadAdminUsers(); };
+
+  async function loadAdminUsers(){
+    var list = document.getElementById('admin-user-list');
+    list.innerHTML = '<p class="empty">Yükleniyor…</p>';
+    try{
+      await initFirebase();
+      var snap = await fbFsMod.getDocs(fbFsMod.collection(fbDb, 'leaderboard'));
+      var rows = [];
+      snap.forEach(function(docSnap){ rows.push({ id: docSnap.id, data: docSnap.data() }); });
+      rows.sort(function(a, b){ return (b.data.totalMs || 0) - (a.data.totalMs || 0); });
+      list.innerHTML = '';
+      if(rows.length === 0){ list.innerHTML = '<p class="empty">Henüz kullanıcı yok.</p>'; return; }
+      rows.forEach(function(r){
+        var row = document.createElement('div');
+        row.className = 'hist-row';
+        var left = document.createElement('div');
+        left.className = 'hist-left';
+        left.innerHTML = '<span>' + (r.data.displayName || 'Kullanıcı') + '</span>';
+        var right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.gap = '10px';
+        right.style.alignItems = 'center';
+        var time = document.createElement('span');
+        time.className = 'hist-right';
+        time.textContent = fmtDuration(r.data.totalMs || 0);
+        var delBtn = document.createElement('button');
+        delBtn.textContent = 'Sil';
+        delBtn.style.padding = '4px 10px';
+        delBtn.style.fontSize = '11px';
+        delBtn.style.color = 'var(--danger)';
+        delBtn.style.borderColor = 'var(--danger)';
+        delBtn.onclick = async function(){
+          if(!confirm('"' + (r.data.displayName || 'Bu kullanıcı') + '" kaydını silmek istediğine emin misin? Liderlik tablosundan ve bulut verisinden kalkacak.')) return;
+          try{
+            await fbFsMod.deleteDoc(fbFsMod.doc(fbDb, 'leaderboard', r.id));
+            await fbFsMod.deleteDoc(fbFsMod.doc(fbDb, 'derstakip_users', r.id));
+            loadAdminUsers();
+          } catch(e){ alert('Silinemedi: ' + e.message); }
+        };
+        right.appendChild(time);
+        right.appendChild(delBtn);
+        row.appendChild(left);
+        row.appendChild(right);
+        list.appendChild(row);
+      });
+    } catch(e){
+      list.innerHTML = '<p class="empty">Yüklenemedi (yetki hatası olabilir, kuralları güncellediğinden emin ol).</p>';
+    }
   }
 
   document.getElementById('verify-send-btn').onclick = async function(){
@@ -757,6 +842,28 @@
       return { icon: icon, name: name, desc: thresholdDays + ' gün üst üste çalış', unlocked: streak >= thresholdDays, progress: pct, progressLabel: streak + ' / ' + thresholdDays + ' gün' };
     }
 
+    var weekAgo = new Date(new Date().toDateString());
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    var daysThisWeek = {};
+    var hasWeekend = false;
+    var hasNightOwl = false;
+    var hasEarlyBird = false;
+    var hasMarathon = false;
+    sessions.forEach(function(s){
+      var sd = new Date(s.date + 'T00:00:00');
+      if(sd >= weekAgo) daysThisWeek[s.date] = true;
+      var day = sd.getDay();
+      if(day === 0 || day === 6) hasWeekend = true;
+      if(s.studyMs >= 3 * 3600000) hasMarathon = true;
+      if(s.endedAt){
+        var startTs = s.endedAt - s.studyMs - s.breakMs;
+        var startHour = new Date(startTs).getHours();
+        if(startHour >= 0 && startHour < 5) hasNightOwl = true;
+        if(startHour >= 5 && startHour < 8) hasEarlyBird = true;
+      }
+    });
+    var distinctDaysThisWeek = Object.keys(daysThisWeek).length;
+
     return [
       { icon: '🚀', name: 'İlk Adım', desc: 'İlk oturumunu tamamla', unlocked: sessions.length >= 1, progress: Math.min(100, sessions.length * 100), progressLabel: sessions.length + ' / 1 oturum' },
       timeBadge('⏱️', '1 Saat', 3600000),
@@ -767,7 +874,12 @@
       streakBadge('🔥', '7 Günlük Seri', 7),
       streakBadge('🔥', '30 Günlük Seri', 30),
       { icon: '🎨', name: 'Çok Yönlü', desc: '3 farklı ders ekle', unlocked: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
-      { icon: '🎯', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', unlocked: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' }
+      { icon: '🎯', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', unlocked: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' },
+      { icon: '🦉', name: 'Gece Kuşu', desc: 'Gece yarısı - 05:00 arası çalış', unlocked: hasNightOwl, progress: hasNightOwl ? 100 : 0, progressLabel: hasNightOwl ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '🐦', name: 'Erkenci Kuş', desc: 'Sabah 05:00 - 08:00 arası çalış', unlocked: hasEarlyBird, progress: hasEarlyBird ? 100 : 0, progressLabel: hasEarlyBird ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '🏃', name: 'Maraton', desc: 'Tek oturumda 3+ saat çalış', unlocked: hasMarathon, progress: hasMarathon ? 100 : 0, progressLabel: hasMarathon ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '⚔️', name: 'Hafta Sonu Savaşçısı', desc: 'Cumartesi veya pazar çalış', unlocked: hasWeekend, progress: hasWeekend ? 100 : 0, progressLabel: hasWeekend ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '📅', name: 'Kararlılık', desc: 'Bu hafta 5 farklı gün çalış', unlocked: distinctDaysThisWeek >= 5, progress: Math.min(100, Math.round(distinctDaysThisWeek / 5 * 100)), progressLabel: distinctDaysThisWeek + ' / 5 gün' }
     ];
   }
 
@@ -790,6 +902,66 @@
       list.appendChild(card);
     });
   }
+
+  function updateAchievementsIconBadge(){
+    var badges = computeBadges();
+    var count = badges.filter(function(b){ return b.unlocked; }).length;
+    var el = document.getElementById('achievements-count-badge');
+    if(count > 0){
+      el.textContent = count;
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function seenBadgesKey(){ return 'derstakip_seen_badges_' + currentUid; }
+  function loadSeenBadges(){
+    try{ return JSON.parse(localStorage.getItem(seenBadgesKey()) || '[]'); } catch(e){ return []; }
+  }
+  function saveSeenBadges(arr){ localStorage.setItem(seenBadgesKey(), JSON.stringify(arr)); }
+
+  function initSeenBadgesIfNeeded(){
+    if(!currentUid) return;
+    if(localStorage.getItem(seenBadgesKey()) === null){
+      var badges = computeBadges();
+      var unlockedNames = badges.filter(function(b){ return b.unlocked; }).map(function(b){ return b.name; });
+      saveSeenBadges(unlockedNames);
+    }
+  }
+
+  var badgeToastTimer = null;
+  function showBadgeToast(newBadges){
+    var toast = document.getElementById('badge-toast');
+    var text = newBadges.length === 1
+      ? (newBadges[0].icon + ' Yeni rozet: ' + newBadges[0].name + '!')
+      : ('🏅 ' + newBadges.length + ' yeni rozet kazandın!');
+    toast.textContent = text;
+    toast.style.display = 'block';
+    requestAnimationFrame(function(){
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    if(badgeToastTimer) clearTimeout(badgeToastTimer);
+    badgeToastTimer = setTimeout(function(){
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(10px)';
+      setTimeout(function(){ toast.style.display = 'none'; }, 300);
+    }, 4000);
+  }
+
+  function checkNewBadges(){
+    if(!currentUid) return;
+    var badges = computeBadges();
+    var seen = loadSeenBadges();
+    var newlyUnlocked = badges.filter(function(b){ return b.unlocked && seen.indexOf(b.name) === -1; });
+    if(newlyUnlocked.length > 0){
+      newlyUnlocked.forEach(function(b){ seen.push(b.name); });
+      saveSeenBadges(seen);
+      showBadgeToast(newlyUnlocked);
+    }
+  }
+
 
   document.getElementById('profile-delete-btn').onclick = async function(){
     var errEl = document.getElementById('profile-error');
@@ -893,12 +1065,14 @@
       currentEmail = user.email;
       document.getElementById('auth-card').style.display = 'none';
       document.getElementById('header-icons').style.display = 'flex';
+      document.getElementById('admin-toggle-btn').style.display = (currentEmail === ADMIN_EMAIL) ? '' : 'none';
       document.getElementById('app-content').style.display = '';
       renderProfile(user);
       loadLocalForUser();
       renderCourses();
       setButtons();
       if(status !== 'idle') startTicking();
+      initSeenBadgesIfNeeded();
       renderAll();
       pullAndSubscribeFirestore();
     } else {
@@ -1331,6 +1505,8 @@
     document.getElementById('session-count').textContent = sessions.length;
     renderProgress();
     renderWeeklyChart();
+    updateAchievementsIconBadge();
+    checkNewBadges();
 
     renderBreakdown();
 
