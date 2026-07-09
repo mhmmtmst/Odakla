@@ -125,6 +125,18 @@
   .week-chart-bar.is-today{ box-shadow: var(--glow-strong); }
   .week-chart-label{ font-size:11px; color: var(--text-muted); margin-top:8px; }
   .week-chart-label.is-today{ color: var(--study); font-weight:700; }
+  .pomodoro-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+  .pomodoro-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .pomodoro-icon{ width:36px; height:36px; border-radius:50%; background: var(--surface); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .pomodoro-title{ font-weight:600; font-size:13px; }
+  .pomodoro-sub{ font-size:10.5px; color: var(--text-muted); margin-top:1px; }
+  .toggle-switch{ position:relative; width:44px; height:25px; flex-shrink:0; display:inline-block; }
+  .toggle-switch input{ opacity:0; width:100%; height:100%; margin:0; cursor:pointer; position:absolute; z-index:2; }
+  .toggle-track{ position:absolute; inset:0; background: var(--surface); border: 1px solid var(--border-strong); border-radius:999px; transition: background .2s ease, border-color .2s ease; }
+  .toggle-thumb{ position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background: var(--text-muted); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+  .toggle-switch input:checked ~ .toggle-track{ background: var(--study-dim); border-color: var(--study); }
+  .toggle-switch input:checked ~ .toggle-thumb{ transform: translateX(19px); background: var(--study); box-shadow: var(--glow-soft); }
+  .pomodoro-cycle-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color: var(--study); background: var(--study-dim); border-radius:999px; padding:5px 12px; margin-bottom:14px; }
   .footer-note{ text-align:center; font-size:12px; color: var(--text-muted); margin-top: 28px; }
   ::-webkit-scrollbar{ height:6px; }
   ::-webkit-scrollbar-thumb{ background: var(--border-strong); border-radius:4px; }
@@ -308,13 +320,23 @@
         <div class="course-label" id="course-label">Önce bir ders seç</div>
       </div>
 
-      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); cursor:pointer;">
-          <input type="checkbox" id="pomodoro-toggle" style="width:16px; height:16px; accent-color: var(--study);">
-          🍅 Pomodoro modu (25 dk çalış / 5 dk mola)
+      <div class="pomodoro-row">
+        <div class="pomodoro-left">
+          <div class="pomodoro-icon">🍅</div>
+          <div>
+            <div class="pomodoro-title">Pomodoro modu</div>
+            <div class="pomodoro-sub">25 dk çalış · 5 dk mola · 4 turda bir uzun mola</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pomodoro-toggle">
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
         </label>
       </div>
-      <div id="pomodoro-cycle-label" style="display:none; text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+      <div style="text-align:center;">
+        <span class="pomodoro-cycle-badge" id="pomodoro-cycle-label" style="display:none;"></span>
+      </div>
 
       <div class="pills" id="course-row"></div>
 
