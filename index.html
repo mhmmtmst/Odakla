@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ders Takip</title>
+<meta name="description" content="Yazılım derslerinde ne kadar çalıştığını takip et, seri ve rozet kazan, arkadaşlarınla liderlik tablosunda yarış.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ders Takip">
+<meta property="og:description" content="Yazılım derslerinde ne kadar çalıştığını takip et, seri ve rozet kazan, arkadaşlarınla liderlik tablosunda yarış.">
+<meta property="og:url" content="https://mhmmtmst.github.io/Ders-Takip/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Ders Takip">
+<meta name="twitter:description" content="Yazılım derslerinde ne kadar çalıştığını takip et, seri ve rozet kazan, arkadaşlarınla liderlik tablosunda yarış.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308090A'/%3E%3Ccircle cx='32' cy='34' r='16' fill='none' stroke='%23FFE500' stroke-width='4'/%3E%3Cline x1='32' y1='34' x2='32' y2='23' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='32' y1='34' x2='39' y2='38' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Crect x='27' y='13' width='10' height='5' rx='2' fill='%23FFE500'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -156,11 +164,25 @@
     color: var(--study);
   }
   .icon-btn svg{ width:18px; height:18px; }
+  .skeleton-line{
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border-strong) 37%, var(--surface-2) 63%);
+    background-size: 400% 100%;
+    border-radius: 8px;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-pulse{
+    0%{ background-position: 100% 50%; }
+    100%{ background-position: 0% 50%; }
+  }
   #profile-toggle-btn{ font-weight:600; font-size:14px; background: var(--surface-2); color: var(--study); }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div id="fatal-error-banner" style="display:none; background:#2A1B02; border:1px solid var(--break); border-radius:12px; padding:16px; margin-bottom:16px; font-size:13px;">
+    <p style="margin:0 0 10px;">⚠️ Beklenmedik bir hata oluştu. Sayfayı yenilemeyi dener misin?</p>
+    <button onclick="location.reload()" style="padding:7px 14px; font-size:12px;">Sayfayı yenile</button>
+  </div>
   <div class="prompt">~/ders-takip $ durum</div>
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
     <h1 style="margin:0;">Ders <span>Takip</span></h1>
@@ -177,7 +199,12 @@
   </div>
 
   <div class="card" id="auth-card">
-    <div id="auth-loading"><p class="empty">Yükleniyor…</p></div>
+    <div id="auth-loading">
+      <div class="skeleton-line" style="width:60%; height:14px; margin-bottom:14px;"></div>
+      <div class="skeleton-line" style="width:100%; height:40px; margin-bottom:10px;"></div>
+      <div class="skeleton-line" style="width:100%; height:40px; margin-bottom:16px;"></div>
+      <div class="skeleton-line" style="width:120px; height:36px;"></div>
+    </div>
 
     <div id="auth-form-wrap" class="auth-form" style="display:none;">
       <p class="section-label" id="auth-title">Giriş yap</p>
@@ -444,14 +471,20 @@
 <div id="badge-toast" style="display:none; position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(10px); opacity:0; transition:opacity .3s ease, transform .3s ease; background:var(--surface); border:1px solid var(--study); box-shadow:var(--glow-strong); border-radius:999px; padding:12px 22px; font-size:13px; font-weight:600; z-index:2000; white-space:nowrap;"></div>
 
 <script>
+window.addEventListener('error', function(){
+  var banner = document.getElementById('fatal-error-banner');
+  if(banner) banner.style.display = '';
+});
 (function(){
   var THEME_KEY = 'derstakip_theme';
   var savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
   if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  var MOON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  var SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
   function applyThemeIcon(){
     var btn = document.getElementById('theme-toggle-btn');
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    btn.textContent = isLight ? '☀️' : '🌙';
+    btn.innerHTML = isLight ? SUN_SVG : MOON_SVG;
   }
   document.getElementById('theme-toggle-btn').onclick = function(){
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
