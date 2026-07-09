@@ -308,6 +308,14 @@
         <div class="course-label" id="course-label">Önce bir ders seç</div>
       </div>
 
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); cursor:pointer;">
+          <input type="checkbox" id="pomodoro-toggle" style="width:16px; height:16px; accent-color: var(--study);">
+          🍅 Pomodoro modu (25 dk çalış / 5 dk mola)
+        </label>
+      </div>
+      <div id="pomodoro-cycle-label" style="display:none; text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:12px;"></div>
+
       <div class="pills" id="course-row"></div>
 
       <div class="add-row">
@@ -1359,12 +1367,104 @@
     if(Notification.permission === 'default'){ Notification.requestPermission(); }
   }
 
+  var pomodoroMode = false;
+  var pomodoroCycleCount = 0;
+  var POMODORO_WORK_MS = 25 * 60000;
+  var POMODORO_BREAK_MS = 5 * 60000;
+  var POMODORO_LONG_BREAK_MS = 15 * 60000;
+  var POMODORO_CYCLES = 4;
+
+  document.getElementById('pomodoro-toggle').onchange = function(){
+    pomodoroMode = this.checked;
+    document.getElementById('pomodoro-cycle-label').style.display = pomodoroMode ? '' : 'none';
+    if(pomodoroMode) updatePomodoroCycleLabel();
+  };
+
+  function updatePomodoroCycleLabel(){
+    var el = document.getElementById('pomodoro-cycle-label');
+    if(!pomodoroMode){ el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.textContent = '🍅 Tamamlanan tur: ' + pomodoroCycleCount + ' (4 turda bir 15 dk uzun mola)';
+  }
+
+  function playPomodoroChime(){
+    try{
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.value = 0.15;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(function(){ o.stop(); ctx.close(); }, 300);
+    } catch(e){}
+  }
+
+  function genericToast(text){
+    var toast = document.getElementById('badge-toast');
+    toast.textContent = text;
+    toast.style.display = 'block';
+    requestAnimationFrame(function(){
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    if(badgeToastTimer) clearTimeout(badgeToastTimer);
+    badgeToastTimer = setTimeout(function(){
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(10px)';
+      setTimeout(function(){ toast.style.display = 'none'; }, 300);
+    }, 4000);
+  }
+
+  function switchPhase(isAuto){
+    var now = Date.now();
+    if(status === 'studying'){
+      studyMs += (now - phaseStartTs);
+      if(pomodoroMode) pomodoroCycleCount++;
+      status = 'break';
+    } else {
+      breakMs += (now - phaseStartTs);
+      status = 'studying';
+    }
+    phaseStartTs = now;
+    setButtons();
+    saveActive();
+    if(pomodoroMode) updatePomodoroCycleLabel();
+    updateNotification();
+    if(isAuto && pomodoroMode){
+      playPomodoroChime();
+      if(status === 'break'){
+        var isLong = pomodoroCycleCount > 0 && pomodoroCycleCount % POMODORO_CYCLES === 0;
+        genericToast(isLong ? '☕ Uzun mola zamanı! (15 dk)' : '☕ Mola zamanı! (5 dk)');
+      } else {
+        genericToast('🍅 Çalışma zamanı! (25 dk)');
+      }
+    }
+  }
+
   function tick(){
     var now = Date.now();
     var liveStudy = studyMs, liveBreak = breakMs;
     if(status === 'studying') liveStudy += (now - phaseStartTs);
     if(status === 'break') liveBreak += (now - phaseStartTs);
-    document.getElementById('timer-main').textContent = fmtHMS(status === 'break' ? liveBreak : liveStudy);
+
+    if(pomodoroMode && status !== 'idle'){
+      var elapsedInPhase = now - phaseStartTs;
+      var targetMs;
+      if(status === 'studying'){
+        targetMs = POMODORO_WORK_MS;
+      } else {
+        var isLong = pomodoroCycleCount > 0 && pomodoroCycleCount % POMODORO_CYCLES === 0;
+        targetMs = isLong ? POMODORO_LONG_BREAK_MS : POMODORO_BREAK_MS;
+      }
+      var remaining = Math.max(0, targetMs - elapsedInPhase);
+      document.getElementById('timer-main').textContent = fmtHMS(remaining);
+      if(remaining <= 0) switchPhase(true);
+    } else {
+      document.getElementById('timer-main').textContent = fmtHMS(status === 'break' ? liveBreak : liveStudy);
+    }
+
     notifTickCount++;
     if(notifTickCount % 20 === 0) updateNotification();
   }
@@ -1387,22 +1487,18 @@
     }
     status = 'studying';
     studyMs = 0; breakMs = 0;
+    pomodoroCycleCount = 0;
     phaseStartTs = Date.now();
     setButtons();
     startTicking();
     saveActive();
     requestNotifPermission();
     updateNotification();
+    if(pomodoroMode) updatePomodoroCycleLabel();
   };
 
   document.getElementById('break-btn').onclick = function(){
-    var now = Date.now();
-    if(status === 'studying'){ studyMs += (now - phaseStartTs); status = 'break'; }
-    else { breakMs += (now - phaseStartTs); status = 'studying'; }
-    phaseStartTs = now;
-    setButtons();
-    saveActive();
-    updateNotification();
+    switchPhase(false);
   };
 
   document.getElementById('stop-btn').onclick = function(){
@@ -1418,6 +1514,8 @@
     closeNotification('Oturum bitti · ' + fmtHMS(finishedStudyMs));
     status = 'idle';
     studyMs = 0; breakMs = 0; phaseStartTs = null;
+    pomodoroCycleCount = 0;
+    document.getElementById('pomodoro-cycle-label').style.display = 'none';
     document.getElementById('timer-main').textContent = '00:00:00';
     setButtons();
     saveActive();
