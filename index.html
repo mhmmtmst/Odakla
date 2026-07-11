@@ -647,6 +647,12 @@ window.addEventListener('error', function(){
     fbDb = fbFsMod.getFirestore(fbApp);
     try{ await fbAuthMod.setPersistence(fbAuth, fbAuthMod.browserLocalPersistence); } catch(e){}
     fbAuthMod.onAuthStateChanged(fbAuth, onAuthChanged);
+    try{
+      await fbAuthMod.getRedirectResult(fbAuth);
+    } catch(e){
+      var errEl = document.getElementById('auth-error');
+      if(errEl) errEl.textContent = translateAuthError(e.code);
+    }
   }
 
   var customPhotoDataUrl = null;
@@ -1476,7 +1482,7 @@ window.addEventListener('error', function(){
     try{
       await initFirebase();
       var provider = new fbAuthMod.GoogleAuthProvider();
-      await fbAuthMod.signInWithPopup(fbAuth, provider);
+      await fbAuthMod.signInWithRedirect(fbAuth, provider);
     } catch(e){
       errEl.textContent = translateAuthError(e.code);
     }
