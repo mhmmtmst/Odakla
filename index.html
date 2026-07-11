@@ -3,17 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ders Takip</title>
+<title>Odakla</title>
 <meta name="description" content="Hangi dersi çalışırsan çalış, süreni kolayca takip et. Seri ve rozet kazan, liderlik tablosunda yarış.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Ders Takip">
+<meta property="og:title" content="Odakla">
 <meta property="og:description" content="Hangi dersi çalışırsan çalış, süreni kolayca takip et. Seri ve rozet kazan, liderlik tablosunda yarış.">
-<meta property="og:url" content="https://mhmmtmst.github.io/Ders-Takip/">
+<meta property="og:url" content="https://odakla.app/">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Ders Takip">
+<meta name="twitter:title" content="Odakla">
 <meta name="twitter:description" content="Hangi dersi çalışırsan çalış, süreni kolayca takip et. Seri ve rozet kazan, liderlik tablosunda yarış.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'self';">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308090A'/%3E%3Ccircle cx='32' cy='34' r='16' fill='none' stroke='%23FFE500' stroke-width='4'/%3E%3Cline x1='32' y1='34' x2='32' y2='23' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='32' y1='34' x2='39' y2='38' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Crect x='27' y='13' width='10' height='5' rx='2' fill='%23FFE500'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#08090A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Odakla">
 <style>
   :root{
     --bg: #08090A;
@@ -214,7 +220,7 @@
     <button onclick="location.reload()" style="padding:7px 14px; font-size:12px;">Sayfayı yenile</button>
   </div>
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-    <h1 style="margin:0;">Ders <span>Takip</span></h1>
+    <h1 style="margin:0;">Odakl<span>a</span></h1>
     <div id="header-icons" style="display:none; gap:8px;">
       <button class="icon-btn" id="theme-toggle-btn" title="Tema"><svg id="theme-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <button class="icon-btn" id="achievements-toggle-btn" title="Başarımlar" style="position:relative;">
@@ -700,7 +706,7 @@ window.addEventListener('error', function(){
   }
 
   var ONBOARDING_STEPS = [
-    { icon: '👋', title: 'Hoş geldin!', text: 'Ders Takip, çalıştığın herhangi bir konuyu — ders, dil, enstrüman, spor, fark etmez — süresiyle takip etmeni sağlar.' },
+    { icon: '👋', title: 'Hoş geldin!', text: 'Odakla, çalıştığın herhangi bir konuyu — ders, dil, enstrüman, spor, fark etmez — süresiyle takip etmeni sağlar.' },
     { icon: '▶️', title: 'Bir ders ekle, başlat', text: 'Ders adını yaz, "+ Ekle" de, sonra seçip "Başlat"a bas. İstersen Pomodoro modunu da açabilirsin.' },
     { icon: '🔥', title: 'Seri tut, rozet kazan', text: 'Her gün çalıştıkça serin uzar. Bir rozeti hak ettiğinde 🎖️ ikonundan gidip "Rozeti Al"a basman yeterli.' },
     { icon: '🏆', title: 'Liderlik tablosunda yarış', text: 'İstersen kupa ikonundan diğer kullanıcılarla yarış, istersen Hesap Ayarları\'ndan liderlik tablosunda görünmeyi kapat.' }
@@ -1604,13 +1610,13 @@ window.addEventListener('error', function(){
     var liveStudy = studyMs + (status === 'studying' ? (now - phaseStartTs) : 0);
     var body = (status === 'studying' ? '▶ Çalışıyor' : '⏸ Molada') + ' · ' + courseName(selectedCourseId) + ' · ' + fmtHMS(liveStudy);
     try{
-      activeNotification = new Notification('Ders Takip', { body: body, tag: 'ders-takip-timer', silent: true, renotify: false });
+      activeNotification = new Notification('Odakla', { body: body, tag: 'ders-takip-timer', silent: true, renotify: false });
     } catch(e){}
   }
   function closeNotification(finalText){
     if(!notifsEnabled()) return;
     try{
-      new Notification('Ders Takip', { body: finalText, tag: 'ders-takip-timer', silent: true, renotify: false });
+      new Notification('Odakla', { body: finalText, tag: 'ders-takip-timer', silent: true, renotify: false });
     } catch(e){}
     activeNotification = null;
   }
@@ -1947,6 +1953,12 @@ window.addEventListener('error', function(){
   }
 
   initFirebase();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
 })();
 </script>
 </body>
