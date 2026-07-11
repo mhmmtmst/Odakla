@@ -12,6 +12,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Ders Takip">
 <meta name="twitter:description" content="Hangi dersi çalışırsan çalış, süreni kolayca takip et. Seri ve rozet kazan, liderlik tablosunda yarış.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'self';">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308090A'/%3E%3Ccircle cx='32' cy='34' r='16' fill='none' stroke='%23FFE500' stroke-width='4'/%3E%3Cline x1='32' y1='34' x2='32' y2='23' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='32' y1='34' x2='39' y2='38' stroke='%23FFE500' stroke-width='3' stroke-linecap='round'/%3E%3Crect x='27' y='13' width='10' height='5' rx='2' fill='%23FFE500'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -133,12 +134,12 @@
   .badge-progress-label{ font-size:9.5px; color: var(--text-muted); margin-top:4px; font-family: var(--font-mono); }
   .week-chart-row{ display:flex; align-items:flex-end; gap:10px; height:150px; padding-top:22px; }
   .week-chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
-  .week-chart-value{ font-size:10px; color: var(--text-secondary); margin-bottom:5px; font-family: var(--font-mono); white-space:nowrap; }
-  .week-chart-track{ position:absolute; bottom:0; width:100%; max-width:30px; height:100%; background: var(--surface-2); border-radius:9px 9px 4px 4px; left:50%; transform:translateX(-50%); }
+  .week-chart-value{ font-size:10px; color: var(--text-secondary); margin-bottom:5px; font-family: var(--font-mono); white-space:nowrap; position:relative; z-index:2; }
+  .week-chart-track{ position:absolute; bottom:0; width:100%; max-width:30px; height:100%; background: var(--surface-2); border-radius:9px 9px 4px 4px; left:50%; transform:translateX(-50%); z-index:0; }
   .week-chart-bar{ width:100%; max-width:30px; border-radius:9px 9px 4px 4px; background: var(--surface-2); transition: height .5s cubic-bezier(.34,1.56,.64,1); min-height:5px; position:relative; z-index:1; }
   .week-chart-bar.has-value{ background: linear-gradient(180deg, var(--study) 0%, rgba(255,229,0,0.45) 100%); box-shadow: var(--glow-soft); }
   .week-chart-bar.is-today{ box-shadow: var(--glow-strong); }
-  .week-chart-label{ font-size:11px; color: var(--text-muted); margin-top:8px; }
+  .week-chart-label{ font-size:11px; color: var(--text-muted); margin-top:8px; position:relative; z-index:2; }
   .week-chart-label.is-today{ color: var(--study); font-weight:700; }
   .course-rank-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom: 1px solid var(--border); }
   .course-rank-row:last-child{ border-bottom:none; }
@@ -570,6 +571,12 @@ window.addEventListener('error', function(){
       return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch];
     });
   }
+  function isSafeImageSrc(src){
+    if(!src || typeof src !== 'string') return false;
+    if(src.indexOf('data:image/') === 0) return true;
+    if(/^https:\/\/[a-zA-Z0-9.-]*\.?googleusercontent\.com\//.test(src)) return true;
+    return false;
+  }
   function todayStr(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function fmtHMS(ms){
     var s = Math.floor(ms/1000);
@@ -643,7 +650,7 @@ window.addEventListener('error', function(){
 
   function setAvatarEl(el){
     var src = customPhotoDataUrl || currentPhotoURL;
-    if(src){
+    if(src && isSafeImageSrc(src)){
       el.innerHTML = '<img src="' + escapeHtml(src) + '" style="width:100%;height:100%;object-fit:cover;">';
     } else {
       el.textContent = currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : '?';
@@ -1351,7 +1358,7 @@ window.addEventListener('error', function(){
         var rankHtml = idx < 3
           ? '<span class="lb-rank lb-rank-medal">' + medals[idx] + '</span>'
           : '<span class="lb-rank">' + (idx + 1) + '</span>';
-        var avatarHtml = r.data.photoDataUrl
+        var avatarHtml = isSafeImageSrc(r.data.photoDataUrl)
           ? '<span class="lb-avatar"><img src="' + escapeHtml(r.data.photoDataUrl) + '" style="width:100%;height:100%;object-fit:cover;"></span>'
           : '<span class="lb-avatar lb-avatar-fallback">' + escapeHtml(r.data.displayName ? r.data.displayName.charAt(0).toUpperCase() : '?') + '</span>';
         var pct = Math.max(3, Math.round((r.data.totalMs || 0) / maxMs * 100));
