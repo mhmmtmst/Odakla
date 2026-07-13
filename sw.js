@@ -1,4 +1,4 @@
-const CACHE_NAME = 'odakla-v1';
+const CACHE_NAME = 'odakla-v2';
 const CORE_ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', function(event){
@@ -22,8 +22,9 @@ self.addEventListener('activate', function(event){
 self.addEventListener('fetch', function(event){
   if(event.request.method !== 'GET') return;
   var url = event.request.url;
+  if(url.indexOf('http') !== 0) return;
   // Never cache Firebase/Google API calls - always go to network for live data
-  if(url.indexOf('googleapis.com') !== -1 || url.indexOf('gstatic.com') !== -1 || url.indexOf('firebaseapp.com') !== -1){
+  if(url.indexOf('googleapis.com') !== -1 || url.indexOf('gstatic.com') !== -1 || url.indexOf('firebaseapp.com') !== -1 || url.indexOf('google.com') !== -1){
     return;
   }
   event.respondWith(
@@ -31,7 +32,7 @@ self.addEventListener('fetch', function(event){
       var networkFetch = fetch(event.request).then(function(response){
         if(response && response.status === 200){
           var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, clone); });
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, clone).catch(function(){}); });
         }
         return response;
       }).catch(function(){ return cached; });
