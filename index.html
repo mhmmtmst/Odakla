@@ -1565,7 +1565,15 @@ window.addEventListener('unhandledrejection', function(e){
     try{
       await initFirebase();
       var provider = new fbAuthMod.GoogleAuthProvider();
-      await fbAuthMod.signInWithRedirect(fbAuth, provider);
+      try{
+        await fbAuthMod.signInWithPopup(fbAuth, provider);
+      } catch(popupErr){
+        if(popupErr && (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/operation-not-supported-in-this-environment' || popupErr.code === 'auth/popup-closed-by-user')){
+          await fbAuthMod.signInWithRedirect(fbAuth, provider);
+        } else {
+          throw popupErr;
+        }
+      }
     } catch(e){
       errEl.textContent = translateAuthError(e.code);
     }
