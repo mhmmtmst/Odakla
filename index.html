@@ -65,6 +65,13 @@
     padding: 32px 16px 80px;
   }
   .wrap{ max-width: 720px; margin: 0 auto; }
+  body.centered-auth{ display:flex; }
+  body.centered-auth .wrap{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; width:100%; }
+  body.centered-auth #app-header-row{ justify-content:center; margin-bottom:32px; }
+  body.centered-auth #app-header-row > div{ text-align:center; }
+  body.centered-auth h1{ font-size:32px; text-shadow: var(--glow-strong); }
+  body.centered-auth #auth-tagline{ display:block !important; }
+  body.centered-auth #auth-card{ box-shadow: 0 0 40px rgba(255,229,0,0.06); }
   .prompt{ font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
   h1{ font-size: 22px; font-weight: 600; margin: 0 0 24px; letter-spacing: -0.2px; }
   h1 span{ color: var(--study); text-shadow: var(--glow-soft); }
@@ -80,11 +87,13 @@
   .pill{ font-family: var(--font-sans); font-size: 13px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; }
   .pill.selected{ border-color: transparent; color: #100F08; font-weight:600; }
   .add-row{ display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
-  input[type=text], input[type=email], input[type=password]{
+  input[type=text], input[type=email], input[type=password], input[type=date]{
     background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text-primary);
     border-radius: 8px; padding: 9px 12px; font-size: 13px; width: 220px; outline: none;
   }
-  input[type=text]:focus, input[type=email]:focus, input[type=password]:focus{ border-color: var(--study); }
+  input[type=text]:focus, input[type=email]:focus, input[type=password]:focus, input[type=date]:focus{ border-color: var(--study); }
+  input[type=date]{ color-scheme: dark; }
+  [data-theme="light"] input[type=date]{ color-scheme: light; }
   button{ font-family: var(--font-sans); font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); cursor: pointer; }
   button:hover{ border-color: var(--text-muted); }
   button:active{ transform: scale(0.98); }
@@ -217,15 +226,18 @@
   #profile-toggle-btn{ font-weight:600; font-size:14px; background: var(--surface-2); color: var(--study); }
 </style>
 </head>
-<body>
+<body class="centered-auth">
 <div class="wrap">
   <div id="fatal-error-banner" style="display:none; background:#2A1B02; border:1px solid var(--break); border-radius:12px; padding:16px; margin-bottom:16px; font-size:13px;">
     <p style="margin:0 0 10px;">⚠️ Beklenmedik bir hata oluştu. Sayfayı yenilemeyi dener misin?</p>
     <p id="fatal-error-detail" style="margin:0 0 10px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); word-break:break-all;"></p>
     <button onclick="location.reload()" style="padding:7px 14px; font-size:12px;">Sayfayı yenile</button>
   </div>
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-    <h1 style="margin:0;">Odakl<span>a</span></h1>
+  <div id="app-header-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+    <div>
+      <h1 style="margin:0;">Odakl<span>a</span></h1>
+      <p id="auth-tagline" style="display:none; margin:6px 0 0; font-size:13px; color:var(--text-secondary);">Hangi dersi çalışırsan çalış, süreni takip et.</p>
+    </div>
     <div id="header-icons" style="display:none; gap:8px;">
       <button class="icon-btn" id="theme-toggle-btn" title="Tema"><span id="theme-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" /><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" /><path d="M19 11h2m-1 -1v2" /></svg></span></button>
       <button class="icon-btn" id="achievements-toggle-btn" title="Başarımlar" style="position:relative;">
@@ -249,8 +261,11 @@
     <div id="auth-form-wrap" class="auth-form" style="display:none;">
       <p class="section-label" id="auth-title">Giriş yap</p>
       <input type="text" id="auth-name" placeholder="adın" style="display:none;">
+      <p id="auth-birthdate-label" class="sync-sub" style="display:none; margin:0 0 6px;">Doğum tarihin</p>
+      <input type="date" id="auth-birthdate" style="display:none;">
       <input type="email" id="auth-email" placeholder="e-posta adresin">
       <input type="password" id="auth-password" placeholder="şifre (en az 6 karakter)">
+      <input type="password" id="auth-password-confirm" placeholder="şifreni doğrula" style="display:none;">
       <label id="auth-terms-row" style="display:none; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--text-secondary); margin-bottom:14px; cursor:pointer;">
         <input type="checkbox" id="auth-terms-check" style="margin-top:2px;">
         <span>Verilerimin <button type="button" class="link-btn" id="auth-terms-privacy-btn" style="font-size:11.5px;">Gizlilik</button> ilkesine uygun işlenmesini kabul ediyorum.</span>
@@ -469,7 +484,11 @@
       <div class="timer-row">
         <div class="phase-badge" id="phase-badge"><span class="dot"></span><span id="phase-text">Hazır</span></div>
         <div class="timer" id="timer-main">00:00:00</div>
-        <div class="course-label" id="course-label">Önce bir ders seç</div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <input type="text" id="focus-input" list="focus-suggestions" placeholder="Neye odaklanmak istersin?" style="width:100%; text-align:center; font-size:14px;">
+        <datalist id="focus-suggestions"></datalist>
       </div>
 
       <div class="pomodoro-row">
@@ -510,14 +529,6 @@
 
       <div style="text-align:center; margin-bottom:14px;">
         <span class="pomodoro-cycle-badge" id="live-count-badge" style="display:none;"></span>
-      </div>
-
-
-      <div class="pills" id="course-row"></div>
-
-      <div class="add-row">
-        <input type="text" id="new-course" placeholder="Yeni ders adı (örn. Matematik, Gitar, İngilizce)">
-        <button id="add-course-btn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Ekle</button>
       </div>
 
       <div class="btn-row">
@@ -615,8 +626,9 @@ window.addEventListener('unhandledrejection', function(e){
   };
   applyThemeIcon();
 
+  document.getElementById('auth-birthdate').max = new Date().toISOString().slice(0, 10);
+
   var PALETTE = ['#4EA8FF','#2DE1B0','#FF5C7A','#B98CFF','#FF9F45','#6FE86F','#43D9FF','#FFB84D'];
-  var LS_COURSES = 'derstakip_courses';
   var LS_SESSIONS = 'derstakip_sessions';
   var LS_ACTIVE = 'derstakip_active';
 
@@ -629,9 +641,8 @@ window.addEventListener('unhandledrejection', function(e){
     appId: "1:1017991514077:web:2e1fb9bc74b3637b0c9834"
   };
 
-  var courses = [];
   var sessions = [];
-  var selectedCourseId = null;
+  var currentFocusLabel = '';
   var status = 'idle';
   var studyMs = 0, breakMs = 0, phaseStartTs = null;
   var tickHandle = null;
@@ -675,20 +686,24 @@ window.addEventListener('unhandledrejection', function(e){
     (a||[]).forEach(function(x){ map[x[key]] = x; });
     return Object.keys(map).map(function(k){ return map[k]; });
   }
+  function colorForLabel(label){
+    var str = String(label || '');
+    var hash = 0;
+    for(var i = 0; i < str.length; i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+    return PALETTE[hash % PALETTE.length];
+  }
 
   function loadLocalForUser(){
-    try { courses = JSON.parse(localStorage.getItem(lsKey(LS_COURSES)) || '[]'); } catch(e){ courses = []; }
     try { sessions = JSON.parse(localStorage.getItem(lsKey(LS_SESSIONS)) || '[]'); } catch(e){ sessions = []; }
     try {
       var a = JSON.parse(localStorage.getItem(lsKey(LS_ACTIVE)) || 'null');
-      if(a){ selectedCourseId = a.courseId; status = a.status; studyMs = a.studyMs; breakMs = a.breakMs; phaseStartTs = a.phaseStartTs; }
+      if(a){ currentFocusLabel = a.label || ''; status = a.status; studyMs = a.studyMs; breakMs = a.breakMs; phaseStartTs = a.phaseStartTs; }
     } catch(e){}
   }
-  function saveCourses(){ localStorage.setItem(lsKey(LS_COURSES), JSON.stringify(courses)); }
   function saveSessions(){ localStorage.setItem(lsKey(LS_SESSIONS), JSON.stringify(sessions)); }
   function saveActive(){
     if(status === 'idle'){ localStorage.removeItem(lsKey(LS_ACTIVE)); return; }
-    localStorage.setItem(lsKey(LS_ACTIVE), JSON.stringify({courseId:selectedCourseId, status:status, studyMs:studyMs, breakMs:breakMs, phaseStartTs:phaseStartTs}));
+    localStorage.setItem(lsKey(LS_ACTIVE), JSON.stringify({label:currentFocusLabel, status:status, studyMs:studyMs, breakMs:breakMs, phaseStartTs:phaseStartTs}));
   }
 
   function translateAuthError(code){
@@ -787,7 +802,7 @@ window.addEventListener('unhandledrejection', function(e){
 
   var ONBOARDING_STEPS = [
     { icon: '👋', title: 'Hoş geldin!', text: 'Odakla, çalıştığın herhangi bir konuyu — ders, dil, enstrüman, spor, fark etmez — süresiyle takip etmeni sağlar.' },
-    { icon: '▶️', title: 'Bir ders ekle, başlat', text: 'Ders adını yaz, "+ Ekle" de, sonra seçip "Başlat"a bas. İstersen Pomodoro modunu da açabilirsin.' },
+    { icon: '▶️', title: 'Neye odaklanacaksın?', text: 'Kutuya ne çalışacağını yaz (örn. "Matematik"), sonra "Başlat"a bas. İstersen Pomodoro modunu da açabilirsin.' },
     { icon: '🔥', title: 'Seri tut, rozet kazan', text: 'Her gün çalıştıkça serin uzar. Bir rozeti hak ettiğinde 🎖️ ikonundan gidip "Rozeti Al"a basman yeterli.' },
     { icon: '🏆', title: 'Liderlik tablosunda yarış', text: 'İstersen kupa ikonundan diğer kullanıcılarla yarış, istersen Hesap Ayarları\'ndan liderlik tablosunda görünmeyi kapat.' }
   ];
@@ -1260,6 +1275,9 @@ window.addEventListener('unhandledrejection', function(e){
       }
     });
     var distinctDaysThisWeek = Object.keys(daysThisWeek).length;
+    var distinctLabels = {};
+    sessions.forEach(function(s){ if(s.label) distinctLabels[s.label] = true; });
+    var distinctLabelCount = Object.keys(distinctLabels).length;
 
     return [
       { icon: BADGE_ICONS.footprints, name: 'İlk Adım', desc: 'İlk oturumunu tamamla', eligible: sessions.length >= 1, progress: Math.min(100, sessions.length * 100), progressLabel: sessions.length + ' / 1 oturum' },
@@ -1270,7 +1288,7 @@ window.addEventListener('unhandledrejection', function(e){
       streakBadge(BADGE_ICONS.flameSmall, '3 Günlük Seri', 3),
       streakBadge(BADGE_ICONS.flameMed, '7 Günlük Seri', 7),
       streakBadge(BADGE_ICONS.flameBig, '30 Günlük Seri', 30),
-      { icon: BADGE_ICONS.shapes, name: 'Çok Yönlü', desc: '3 farklı ders ekle', eligible: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
+      { icon: BADGE_ICONS.shapes, name: 'Çok Yönlü', desc: '3 farklı konuya odaklan', eligible: distinctLabelCount >= 3, progress: Math.min(100, Math.round(distinctLabelCount / 3 * 100)), progressLabel: distinctLabelCount + ' / 3 konu' },
       { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 7a5 5 0 1 0 5 5" /><path d="M13 3.055a9 9 0 1 0 7.941 7.945" /><path d="M15 6v3h3l3 -3h-3v-3l-3 3" /><path d="M15 9l-3 3" /></svg>', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', eligible: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' },
       { icon: '🦉', name: 'Gece Kuşu', desc: 'Gece yarısı - 05:00 arası çalış', eligible: hasNightOwl, progress: hasNightOwl ? 100 : 0, progressLabel: hasNightOwl ? 'Tamamlandı' : 'Henüz yok' },
       { icon: BADGE_ICONS.bird, name: 'Erkenci Kuş', desc: 'Sabah 05:00 - 08:00 arası çalış', eligible: hasEarlyBird, progress: hasEarlyBird ? 100 : 0, progressLabel: hasEarlyBird ? 'Tamamlandı' : 'Henüz yok' },
@@ -1381,7 +1399,6 @@ window.addEventListener('unhandledrejection', function(e){
       var uidToDelete = currentUid;
       try{ await fbFsMod.deleteDoc(fbFsMod.doc(fbDb, 'derstakip_users', uidToDelete)); } catch(e2){}
       try{ await fbFsMod.deleteDoc(fbFsMod.doc(fbDb, 'leaderboard', uidToDelete)); } catch(e2){}
-      localStorage.removeItem(lsKey(LS_COURSES));
       localStorage.removeItem(lsKey(LS_SESSIONS));
       localStorage.removeItem(lsKey(LS_ACTIVE));
       await fbAuthMod.deleteUser(fbAuth.currentUser);
@@ -1415,9 +1432,9 @@ window.addEventListener('unhandledrejection', function(e){
   };
 
   document.getElementById('export-csv-btn').onclick = function(){
-    var rows = [['Tarih', 'Ders', 'Çalışma (dk)', 'Mola (dk)']];
+    var rows = [['Tarih', 'Odak', 'Çalışma (dk)', 'Mola (dk)']];
     sessions.slice().sort(function(a, b){ return (a.endedAt || 0) - (b.endedAt || 0); }).forEach(function(s){
-      rows.push([s.date, courseName(s.courseId), Math.round(s.studyMs / 60000), Math.round(s.breakMs / 60000)]);
+      rows.push([s.date, s.label || 'Bilinmiyor', Math.round(s.studyMs / 60000), Math.round(s.breakMs / 60000)]);
     });
     var csv = rows.map(function(r){
       return r.map(function(cell){
@@ -1502,6 +1519,7 @@ window.addEventListener('unhandledrejection', function(e){
     if(user){
       currentUid = user.uid;
       currentEmail = user.email;
+      document.body.classList.remove('centered-auth');
       document.getElementById('auth-card').style.display = 'none';
       document.getElementById('header-icons').style.display = 'flex';
       document.getElementById('admin-toggle-btn').style.display = (currentEmail === ADMIN_EMAIL) ? '' : 'none';
@@ -1509,7 +1527,10 @@ window.addEventListener('unhandledrejection', function(e){
       document.getElementById('guest-banner').style.display = user.isAnonymous ? '' : 'none';
       renderProfile(user);
       loadLocalForUser();
-      renderCourses();
+      renderFocusSuggestions();
+      var focusInput = document.getElementById('focus-input');
+      focusInput.value = currentFocusLabel;
+      focusInput.readOnly = (status !== 'idle');
       setButtons();
       if(status !== 'idle') startTicking();
       renderAll();
@@ -1521,6 +1542,7 @@ window.addEventListener('unhandledrejection', function(e){
       if(liveCountUnsub){ liveCountUnsub(); liveCountUnsub = null; }
       stopTicking();
       closeAllPanels();
+      document.body.classList.add('centered-auth');
       document.getElementById('app-content').style.display = 'none';
       document.getElementById('header-icons').style.display = 'none';
       document.getElementById('auth-card').style.display = '';
@@ -1569,7 +1591,7 @@ window.addEventListener('unhandledrejection', function(e){
     if(suppressPush || !currentUid) return;
     try{
       var docRef = fbFsMod.doc(fbDb, 'derstakip_users', currentUid);
-      await fbFsMod.setDoc(docRef, { courses: courses, sessions: sessions, updatedAt: Date.now(), leaderboardVisible: leaderboardVisible }, { merge: true });
+      await fbFsMod.setDoc(docRef, { sessions: sessions, updatedAt: Date.now(), leaderboardVisible: leaderboardVisible }, { merge: true });
       var totalMs = sessions.reduce(function(sum, s){ return sum + s.studyMs; }, 0);
       var weekMs = weekTotalMs();
       var league = getLeague(weekMs).current.name;
@@ -1628,11 +1650,10 @@ window.addEventListener('unhandledrejection', function(e){
       if(snap.exists()){
         var remote = snap.data();
         suppressPush = true;
-        courses = mergeArr(courses, remote.courses || [], 'id');
         sessions = mergeArr(sessions, remote.sessions || [], 'id');
-        saveCourses(); saveSessions();
+        saveSessions();
         suppressPush = false;
-        renderCourses(); renderAll();
+        renderFocusSuggestions(); renderAll();
         if(remote.photoDataUrl){
           customPhotoDataUrl = remote.photoDataUrl;
           setAvatarEl(document.getElementById('profile-avatar'));
@@ -1660,16 +1681,15 @@ window.addEventListener('unhandledrejection', function(e){
         unsubscribeFn = fbFsMod.onSnapshot(docRef, function(snap2){
           if(!snap2.exists()) return;
           var remote2 = snap2.data();
-          var before = JSON.stringify({c: courses, s: sessions});
-          var mergedCourses = mergeArr(courses, remote2.courses || [], 'id');
+          var before = JSON.stringify(sessions);
           var mergedSessions = mergeArr(sessions, remote2.sessions || [], 'id');
-          var after = JSON.stringify({c: mergedCourses, s: mergedSessions});
+          var after = JSON.stringify(mergedSessions);
           if(before !== after){
             suppressPush = true;
-            courses = mergedCourses; sessions = mergedSessions;
-            saveCourses(); saveSessions();
+            sessions = mergedSessions;
+            saveSessions();
             suppressPush = false;
-            renderCourses(); renderAll();
+            renderFocusSuggestions(); renderAll();
           }
         });
       }
@@ -1682,6 +1702,9 @@ window.addEventListener('unhandledrejection', function(e){
     document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Giriş yap' : 'Kayıt ol';
     document.getElementById('auth-switch-btn').textContent = authMode === 'login' ? 'Hesabın yok mu? Kayıt ol' : 'Hesabın var mı? Giriş yap';
     document.getElementById('auth-name').style.display = authMode === 'signup' ? '' : 'none';
+    document.getElementById('auth-birthdate-label').style.display = authMode === 'signup' ? '' : 'none';
+    document.getElementById('auth-birthdate').style.display = authMode === 'signup' ? '' : 'none';
+    document.getElementById('auth-password-confirm').style.display = authMode === 'signup' ? '' : 'none';
     document.getElementById('auth-terms-row').style.display = authMode === 'signup' ? 'flex' : 'none';
     document.getElementById('auth-error').textContent = '';
   };
@@ -1693,14 +1716,21 @@ window.addEventListener('unhandledrejection', function(e){
 
   async function submitAuth(){
     var name = document.getElementById('auth-name').value.trim();
+    var birthdate = document.getElementById('auth-birthdate').value;
     var email = document.getElementById('auth-email').value.trim();
     var pass = document.getElementById('auth-password').value;
+    var passConfirm = document.getElementById('auth-password-confirm').value;
     var errEl = document.getElementById('auth-error');
     errEl.style.color = 'var(--danger)';
     errEl.textContent = '';
     if(!email || !pass){ errEl.textContent = 'E-posta ve şifre gerekli.'; return; }
     if(authMode === 'signup'){
       if(!name){ errEl.textContent = 'Adını yazar mısın?'; return; }
+      if(!birthdate){ errEl.textContent = 'Doğum tarihini seçer misin?'; return; }
+      var age = Math.floor((new Date() - new Date(birthdate)) / 31557600000);
+      if(age < 13){ errEl.textContent = 'Üzgünüz, bu site 13 yaş altı kullanıcılara açık değil.'; return; }
+      if(age > 100){ errEl.textContent = 'Doğum tarihini kontrol eder misin?'; return; }
+      if(pass !== passConfirm){ errEl.textContent = 'Şifreler eşleşmiyor.'; return; }
       if(!document.getElementById('auth-terms-check').checked){ errEl.textContent = 'Devam etmek için gizlilik ilkesini kabul etmen gerekiyor.'; return; }
     }
     try{
@@ -1715,6 +1745,10 @@ window.addEventListener('unhandledrejection', function(e){
         }
         try{ await fbAuthMod.updateProfile(cred.user, { displayName: name }); } catch(e3){}
         try{ await fbAuthMod.sendEmailVerification(cred.user); } catch(e2){}
+        try{
+          var ref = fbFsMod.doc(fbDb, 'derstakip_users', cred.user.uid);
+          await fbFsMod.setDoc(ref, { birthdate: birthdate, updatedAt: Date.now() }, { merge: true });
+        } catch(e5){}
       } else {
         await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, pass);
       }
@@ -1800,73 +1834,16 @@ window.addEventListener('unhandledrejection', function(e){
     }
   };
 
-  function courseColor(id){ var idx = courses.findIndex(function(c){ return c.id===id; }); return PALETTE[idx % PALETTE.length] || '#5C6478'; }
-  function courseName(id){ var c = courses.find(function(c){ return c.id===id; }); return c ? c.name : 'Silinmiş ders'; }
-
-  function renderCourses(){
-    var row = document.getElementById('course-row');
-    row.innerHTML = '';
-    courses.forEach(function(c){
-      var wrap = document.createElement('span');
-      wrap.style.position = 'relative';
-      wrap.style.display = 'inline-flex';
-      var pill = document.createElement('button');
-      pill.className = 'pill' + (c.id === selectedCourseId ? ' selected' : '');
-      pill.textContent = c.name;
-      pill.style.paddingRight = '26px';
-      if(c.id === selectedCourseId) pill.style.background = courseColor(c.id);
-      pill.onclick = function(){
-        if(status !== 'idle') return;
-        selectedCourseId = c.id;
-        renderCourses();
-        document.getElementById('course-label').textContent = c.name;
-      };
-      var del = document.createElement('button');
-      del.textContent = '✕';
-      del.title = 'Dersi sil';
-      del.style.position = 'absolute';
-      del.style.right = '4px';
-      del.style.top = '50%';
-      del.style.transform = 'translateY(-50%)';
-      del.style.width = '18px';
-      del.style.height = '18px';
-      del.style.padding = '0';
-      del.style.fontSize = '10px';
-      del.style.border = 'none';
-      del.style.background = 'transparent';
-      del.style.color = c.id === selectedCourseId ? 'rgba(6,17,13,0.6)' : 'var(--text-muted)';
-      del.onclick = function(e){
-        e.stopPropagation();
-        if(status !== 'idle'){ alert('Önce çalışan oturumu bitir.'); return; }
-        if(!confirm('"' + c.name + '" dersini silmek istediğine emin misin? Geçmiş kayıtların kalır, sadece ders listeden kalkar.')) return;
-        courses = courses.filter(function(x){ return x.id !== c.id; });
-        if(selectedCourseId === c.id) selectedCourseId = null;
-        saveCourses();
-        renderCourses();
-        pushRemote();
-      };
-      wrap.appendChild(pill);
-      wrap.appendChild(del);
-      row.appendChild(wrap);
+  function renderFocusSuggestions(){
+    var list = document.getElementById('focus-suggestions');
+    if(!list) return;
+    var labels = [];
+    var seen = {};
+    sessions.slice().sort(function(a, b){ return (b.endedAt || 0) - (a.endedAt || 0); }).forEach(function(s){
+      if(s.label && !seen[s.label]){ seen[s.label] = true; labels.push(s.label); }
     });
-    document.getElementById('course-label').textContent = selectedCourseId ? courseName(selectedCourseId) : 'Önce bir ders seç';
+    list.innerHTML = labels.slice(0, 15).map(function(l){ return '<option value="' + escapeHtml(l) + '"></option>'; }).join('');
   }
-
-  document.getElementById('add-course-btn').onclick = function(){
-    var input = document.getElementById('new-course');
-    var name = input.value.trim();
-    if(!name) return;
-    var c = { id: uid(), name: name };
-    courses.push(c);
-    selectedCourseId = c.id;
-    input.value = '';
-    saveCourses();
-    renderCourses();
-    pushRemote();
-  };
-  document.getElementById('new-course').addEventListener('keydown', function(e){
-    if(e.key === 'Enter') document.getElementById('add-course-btn').click();
-  });
 
   function setButtons(){
     var startBtn = document.getElementById('start-btn');
@@ -1907,7 +1884,7 @@ window.addEventListener('unhandledrejection', function(e){
     if(!notifsEnabled() || status === 'idle') return;
     var now = Date.now();
     var liveStudy = studyMs + (status === 'studying' ? (now - phaseStartTs) : 0);
-    var body = (status === 'studying' ? '▶ Çalışıyor' : '⏸ Molada') + ' · ' + courseName(selectedCourseId) + ' · ' + fmtHMS(liveStudy);
+    var body = (status === 'studying' ? '▶ Çalışıyor' : '⏸ Molada') + ' · ' + currentFocusLabel + ' · ' + fmtHMS(liveStudy);
     try{
       activeNotification = new Notification('Odakla', { body: body, tag: 'ders-takip-timer', silent: true, renotify: false });
     } catch(e){}
@@ -2053,11 +2030,11 @@ window.addEventListener('unhandledrejection', function(e){
   });
 
   document.getElementById('start-btn').onclick = function(){
-    if(!selectedCourseId){
-      if(courses.length === 0){ document.getElementById('new-course').focus(); return; }
-      selectedCourseId = courses[0].id;
-      renderCourses();
-    }
+    var input = document.getElementById('focus-input');
+    var label = input.value.trim();
+    if(!label){ input.focus(); return; }
+    currentFocusLabel = label;
+    input.readOnly = true;
     status = 'studying';
     studyMs = 0; breakMs = 0;
     pomodoroCycleCount = 0;
@@ -2082,8 +2059,9 @@ window.addEventListener('unhandledrejection', function(e){
     stopTicking();
     var finishedStudyMs = studyMs;
     if(studyMs > 1000 || breakMs > 1000){
-      sessions.push({ id: uid(), courseId: selectedCourseId, date: todayStr(), studyMs: studyMs, breakMs: breakMs, endedAt: now });
+      sessions.push({ id: uid(), label: currentFocusLabel, date: todayStr(), studyMs: studyMs, breakMs: breakMs, endedAt: now });
       saveSessions();
+      renderFocusSuggestions();
     }
     closeNotification('Oturum bitti · ' + fmtHMS(finishedStudyMs));
     status = 'idle';
@@ -2091,6 +2069,9 @@ window.addEventListener('unhandledrejection', function(e){
     pomodoroCycleCount = 0;
     document.getElementById('pomodoro-cycle-label').style.display = 'none';
     document.getElementById('timer-main').textContent = '00:00:00';
+    document.getElementById('focus-input').readOnly = false;
+    document.getElementById('focus-input').value = '';
+    currentFocusLabel = '';
     setButtons();
     saveActive();
     renderAll();
@@ -2119,33 +2100,34 @@ window.addEventListener('unhandledrejection', function(e){
   function renderBreakdown(){
     var list = document.getElementById('breakdown-list');
     list.innerHTML = '';
-    var byCourse = {};
+    var byLabel = {};
     sessions.forEach(function(s){
       if(!inRange(s.date, breakdownRange)) return;
-      if(!byCourse[s.courseId]) byCourse[s.courseId] = { studyMs: 0, breakMs: 0 };
-      byCourse[s.courseId].studyMs += s.studyMs;
-      byCourse[s.courseId].breakMs += s.breakMs;
+      var key = s.label || 'Bilinmiyor';
+      if(!byLabel[key]) byLabel[key] = { studyMs: 0, breakMs: 0 };
+      byLabel[key].studyMs += s.studyMs;
+      byLabel[key].breakMs += s.breakMs;
     });
-    var ids = Object.keys(byCourse).sort(function(a,b){ return byCourse[b].studyMs - byCourse[a].studyMs; });
-    if(ids.length === 0){
+    var labels = Object.keys(byLabel).sort(function(a,b){ return byLabel[b].studyMs - byLabel[a].studyMs; });
+    if(labels.length === 0){
       list.innerHTML = '<p class="empty">' + (breakdownRange === 'today' ? 'Bugün henüz kayıt yok.' : 'Bu hafta henüz kayıt yok.') + '</p>';
       return;
     }
-    ids.forEach(function(cid){
+    labels.forEach(function(label){
       var row = document.createElement('div');
       row.className = 'breakdown-row';
       var left = document.createElement('div');
       left.className = 'breakdown-left';
       var dot = document.createElement('span');
       dot.className = 'dot';
-      dot.style.color = courseColor(cid);
+      dot.style.color = colorForLabel(label);
       var name = document.createElement('span');
-      name.textContent = courseName(cid);
+      name.textContent = label;
       left.appendChild(dot);
       left.appendChild(name);
       var right = document.createElement('div');
       right.className = 'breakdown-times';
-      var d = byCourse[cid];
+      var d = byLabel[label];
       right.innerHTML =
         '<span class="t-study">📘 ' + fmtDuration(d.studyMs) + '</span>' +
         (d.breakMs > 30000 ? '<span class="t-break">☕ ' + fmtDuration(d.breakMs) + '</span>' : '');
@@ -2162,11 +2144,12 @@ window.addEventListener('unhandledrejection', function(e){
     weekAgo.setDate(weekAgo.getDate() - 6);
 
     var todayMs = 0, weekMs = 0;
-    var byCourseAll = {};
+    var byLabelAll = {};
     var dayTotals = {};
 
     sessions.forEach(function(s){
-      byCourseAll[s.courseId] = (byCourseAll[s.courseId] || 0) + s.studyMs;
+      var key = s.label || 'Bilinmiyor';
+      byLabelAll[key] = (byLabelAll[key] || 0) + s.studyMs;
       dayTotals[s.date] = (dayTotals[s.date] || 0) + s.studyMs;
       if(s.date === today) todayMs += s.studyMs;
       var sd = new Date(s.date + 'T00:00:00');
@@ -2185,7 +2168,7 @@ window.addEventListener('unhandledrejection', function(e){
 
     var barsWrap = document.getElementById('course-bars');
     barsWrap.innerHTML = '';
-    var entries = Object.keys(byCourseAll).map(function(cid){ return { cid: cid, ms: byCourseAll[cid] }; }).sort(function(a,b){ return b.ms - a.ms; });
+    var entries = Object.keys(byLabelAll).map(function(label){ return { label: label, ms: byLabelAll[label] }; }).sort(function(a,b){ return b.ms - a.ms; });
     if(entries.length === 0){
       barsWrap.innerHTML = '<p class="empty">Henüz kayıtlı oturum yok.</p>';
     } else {
@@ -2196,18 +2179,18 @@ window.addEventListener('unhandledrejection', function(e){
         var pct = Math.round(e.ms / grandTotal * 100);
         var dot = document.createElement('span');
         dot.className = 'course-rank-dot';
-        dot.style.background = courseColor(e.cid);
+        dot.style.background = colorForLabel(e.label);
         var mid = document.createElement('div');
         mid.className = 'course-rank-mid';
         var nameEl = document.createElement('div');
         nameEl.className = 'course-rank-name';
-        nameEl.textContent = courseName(e.cid);
+        nameEl.textContent = e.label;
         var track = document.createElement('div');
         track.className = 'course-rank-track';
         var fill = document.createElement('div');
         fill.className = 'course-rank-fill';
         fill.style.width = Math.max(3, pct) + '%';
-        fill.style.background = courseColor(e.cid);
+        fill.style.background = colorForLabel(e.label);
         track.appendChild(fill);
         mid.appendChild(nameEl);
         mid.appendChild(track);
@@ -2258,7 +2241,7 @@ window.addEventListener('unhandledrejection', function(e){
         row.className = 'hist-row';
         var left = document.createElement('div');
         left.className = 'hist-left';
-        left.innerHTML = '<span class="dot" style="color:' + courseColor(s.courseId) + '"></span><span>' + escapeHtml(courseName(s.courseId)) + ' · ' + s.date + '</span>';
+        left.innerHTML = '<span class="dot" style="color:' + colorForLabel(s.label) + '"></span><span>' + escapeHtml(s.label || 'Bilinmiyor') + ' · ' + s.date + '</span>';
         var right = document.createElement('div');
         right.className = 'hist-right';
         right.innerHTML = '<span class="t-study">' + fmtDuration(s.studyMs) + '</span>' + (s.breakMs > 30000 ? '<span class="t-break">+' + fmtDuration(s.breakMs) + ' mola</span>' : '');
