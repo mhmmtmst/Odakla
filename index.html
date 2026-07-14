@@ -167,6 +167,7 @@
   .toggle-switch input:checked ~ .toggle-track{ background: var(--study-dim); border-color: var(--study); }
   .toggle-switch input:checked ~ .toggle-thumb{ transform: translateX(19px); background: var(--study); box-shadow: var(--glow-soft); }
   .pomodoro-cycle-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color: var(--study); background: var(--study-dim); border-radius:999px; padding:5px 12px; margin-bottom:14px; }
+  .stepper-btn{ width:26px; height:26px; padding:0; border-radius:50%; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; }
   .lb-row{ display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px; margin-bottom:6px; }
   .lb-row-top{ background: var(--surface-2); }
   .lb-row-me{ border: 1px solid var(--study); box-shadow: var(--glow-soft); }
@@ -227,7 +228,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 13.5 7 22l5-3 5 3-2-8.5"/></svg>
         <span id="achievements-count-badge" style="display:none; position:absolute; top:-3px; right:-3px; background:var(--study); color:#100F08; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:999px; align-items:center; justify-content:center; padding:0 3px;"></span>
       </button>
-      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 5H4a2 2 0 0 0 0 4h1M17 5h3a2 2 0 0 1 0 4h-1"/></svg></button>
+      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><span id="league-icon-display"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 5H4a2 2 0 0 0 0 4h1M17 5h3a2 2 0 0 1 0 4h-1"/></svg></span></button>
       <button class="icon-btn" id="admin-toggle-btn" title="Yönetici Paneli" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
       <button class="icon-btn" id="profile-toggle-btn" title="Hesabım"></button>
     </div>
@@ -472,7 +473,7 @@
           <div class="pomodoro-icon">🍅</div>
           <div>
             <div class="pomodoro-title">Pomodoro modu</div>
-            <div class="pomodoro-sub">25 dk çalış · 5 dk mola · 4 turda bir uzun mola</div>
+            <div class="pomodoro-sub" id="pomodoro-desc">25 dk çalış · 5 dk mola · 4 turda bir uzun mola</div>
           </div>
         </div>
         <label class="toggle-switch">
@@ -481,8 +482,39 @@
           <span class="toggle-thumb"></span>
         </label>
       </div>
+      <div id="pomodoro-settings-row" style="display:none; gap:14px; justify-content:center; margin:10px 0 4px; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div class="sync-sub" style="margin-bottom:4px;">Çalışma (dk)</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button id="pomodoro-work-down" class="stepper-btn">−</button>
+            <span id="pomodoro-work-value" style="font-family:var(--font-mono); font-size:14px; min-width:24px; display:inline-block;">25</span>
+            <button id="pomodoro-work-up" class="stepper-btn">+</button>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="sync-sub" style="margin-bottom:4px;">Mola (dk)</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button id="pomodoro-break-down" class="stepper-btn">−</button>
+            <span id="pomodoro-break-value" style="font-family:var(--font-mono); font-size:14px; min-width:24px; display:inline-block;">5</span>
+            <button id="pomodoro-break-up" class="stepper-btn">+</button>
+          </div>
+        </div>
+      </div>
       <div style="text-align:center;">
         <span class="pomodoro-cycle-badge" id="pomodoro-cycle-label" style="display:none;"></span>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div class="sync-sub" style="margin-bottom:6px; text-align:center;">Ne üzerine odaklanıyorsun?</div>
+        <select id="category-select" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px; margin-bottom:8px;">
+          <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
+          <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
+          <option value="kitap">📖 Kitap &amp; Araştırma</option>
+          <option value="diger">✨ Diğer</option>
+        </select>
+        <div style="text-align:center;">
+          <span class="pomodoro-cycle-badge" id="live-count-badge" style="display:none;"></span>
+        </div>
       </div>
 
       <div class="pills" id="course-row"></div>
@@ -503,10 +535,6 @@
       <div class="stat"><p class="label">Bugün</p><p class="value" id="today-total">0dk</p></div>
       <div class="stat"><p class="label">Bu hafta</p><p class="value" id="week-total">0dk</p></div>
       <div class="stat"><p class="label">Toplam oturum</p><p class="value" id="session-count">0</p></div>
-    </div>
-
-    <div class="card">
-      <div id="league-badge" style="margin-bottom:0;"></div>
     </div>
 
     <div class="card">
@@ -1056,16 +1084,22 @@ window.addEventListener('unhandledrejection', function(e){
   function renderLeagueBadge(){
     var weekMs = weekTotalMs();
     var info = getLeague(weekMs);
-    var el = document.getElementById('league-badge');
-    if(!el) return;
-    var html = '<span style="font-size:22px;">' + info.current.icon + '</span> <strong style="color:' + info.current.color + ';">' + info.current.name + ' Lig</strong>';
-    if(info.next){
-      var remainMs = (info.next.minHours * 3600000) - weekMs;
-      html += '<div class="sync-sub" style="margin-top:4px;">' + info.next.icon + ' ' + info.next.name + '\'e ' + fmtDuration(Math.max(0, remainMs)) + ' kaldı</div>';
-    } else {
-      html += '<div class="sync-sub" style="margin-top:4px;">En üst ligdesin! 🏆</div>';
+    var iconEl = document.getElementById('league-icon-display');
+    var btnEl = document.getElementById('leaderboard-toggle-btn');
+    if(iconEl){
+      iconEl.textContent = info.current.icon;
+      iconEl.style.fontSize = '17px';
     }
-    el.innerHTML = html;
+    if(btnEl){
+      var title = info.current.name + ' Lig';
+      if(info.next){
+        var remainMs = (info.next.minHours * 3600000) - weekMs;
+        title += ' · ' + info.next.name + '\'e ' + fmtDuration(Math.max(0, remainMs)) + ' kaldı';
+      } else {
+        title += ' · En üst ligdesin!';
+      }
+      btnEl.title = title;
+    }
   }
 
   function renderProgress(){
@@ -1470,9 +1504,12 @@ window.addEventListener('unhandledrejection', function(e){
       if(status !== 'idle') startTicking();
       renderAll();
       pullAndSubscribeFirestore();
+      initCategorySelect();
+      subscribeLiveCount();
     } else {
       currentUid = null;
       if(unsubscribeFn){ unsubscribeFn(); unsubscribeFn = null; }
+      if(liveCountUnsub){ liveCountUnsub(); liveCountUnsub = null; }
       stopTicking();
       closeAllPanels();
       document.getElementById('app-content').style.display = 'none';
@@ -1480,6 +1517,54 @@ window.addEventListener('unhandledrejection', function(e){
       document.getElementById('auth-card').style.display = '';
       document.getElementById('auth-form-wrap').style.display = '';
     }
+  }
+
+  var selectedCategory = localStorage.getItem('derstakip_category') || 'yazilim';
+  var liveCountUnsub = null;
+
+  function initCategorySelect(){
+    var sel = document.getElementById('category-select');
+    sel.value = selectedCategory;
+    sel.onchange = function(){
+      selectedCategory = sel.value;
+      localStorage.setItem('derstakip_category', selectedCategory);
+      subscribeLiveCount();
+    };
+  }
+
+  async function subscribeLiveCount(){
+    var badge = document.getElementById('live-count-badge');
+    if(liveCountUnsub){ liveCountUnsub(); liveCountUnsub = null; }
+    try{
+      await initFirebase();
+      var q = fbFsMod.query(fbFsMod.collection(fbDb, 'live_activity'), fbFsMod.where('category', '==', selectedCategory));
+      liveCountUnsub = fbFsMod.onSnapshot(q, function(snap){
+        var count = snap.size;
+        if(count > 0){
+          badge.style.display = '';
+          badge.textContent = '🟢 Şu an ' + count + ' kişi bu kategoride odaklanıyor';
+        } else {
+          badge.style.display = 'none';
+        }
+      }, function(){ badge.style.display = 'none'; });
+    } catch(e){ badge.style.display = 'none'; }
+  }
+
+  async function joinLiveActivity(){
+    if(!currentUid) return;
+    try{
+      await initFirebase();
+      var ref = fbFsMod.doc(fbDb, 'live_activity', currentUid);
+      await fbFsMod.setDoc(ref, { category: selectedCategory, startedAt: Date.now(), expireAt: Date.now() + 4 * 3600000 });
+    } catch(e){ console.error(e); }
+  }
+
+  async function leaveLiveActivity(){
+    if(!currentUid) return;
+    try{
+      await initFirebase();
+      await fbFsMod.deleteDoc(fbFsMod.doc(fbDb, 'live_activity', currentUid));
+    } catch(e){ console.error(e); }
   }
 
   async function pushRemote(){
@@ -1843,14 +1928,30 @@ window.addEventListener('unhandledrejection', function(e){
 
   var pomodoroMode = false;
   var pomodoroCycleCount = 0;
-  var POMODORO_WORK_MS = 25 * 60000;
-  var POMODORO_BREAK_MS = 5 * 60000;
+  var pomodoroWorkMin = parseInt(localStorage.getItem('derstakip_pomodoro_work_min'), 10) || 25;
+  var pomodoroBreakMin = parseInt(localStorage.getItem('derstakip_pomodoro_break_min'), 10) || 5;
   var POMODORO_LONG_BREAK_MS = 15 * 60000;
   var POMODORO_CYCLES = 4;
+
+  function pomodoroWorkMs(){ return pomodoroWorkMin * 60000; }
+  function pomodoroBreakMs(){ return pomodoroBreakMin * 60000; }
+
+  function updatePomodoroDesc(){
+    document.getElementById('pomodoro-desc').textContent = pomodoroWorkMin + ' dk çalış · ' + pomodoroBreakMin + ' dk mola · 4 turda bir uzun mola';
+    document.getElementById('pomodoro-work-value').textContent = pomodoroWorkMin;
+    document.getElementById('pomodoro-break-value').textContent = pomodoroBreakMin;
+  }
+  updatePomodoroDesc();
+
+  document.getElementById('pomodoro-work-up').onclick = function(){ pomodoroWorkMin = Math.min(120, pomodoroWorkMin + 5); localStorage.setItem('derstakip_pomodoro_work_min', pomodoroWorkMin); updatePomodoroDesc(); };
+  document.getElementById('pomodoro-work-down').onclick = function(){ pomodoroWorkMin = Math.max(5, pomodoroWorkMin - 5); localStorage.setItem('derstakip_pomodoro_work_min', pomodoroWorkMin); updatePomodoroDesc(); };
+  document.getElementById('pomodoro-break-up').onclick = function(){ pomodoroBreakMin = Math.min(60, pomodoroBreakMin + 1); localStorage.setItem('derstakip_pomodoro_break_min', pomodoroBreakMin); updatePomodoroDesc(); };
+  document.getElementById('pomodoro-break-down').onclick = function(){ pomodoroBreakMin = Math.max(1, pomodoroBreakMin - 1); localStorage.setItem('derstakip_pomodoro_break_min', pomodoroBreakMin); updatePomodoroDesc(); };
 
   document.getElementById('pomodoro-toggle').onchange = function(){
     pomodoroMode = this.checked;
     document.getElementById('pomodoro-cycle-label').style.display = pomodoroMode ? '' : 'none';
+    document.getElementById('pomodoro-settings-row').style.display = pomodoroMode ? 'flex' : 'none';
     if(pomodoroMode) updatePomodoroCycleLabel();
   };
 
@@ -1910,9 +2011,9 @@ window.addEventListener('unhandledrejection', function(e){
       playPomodoroChime();
       if(status === 'break'){
         var isLong = pomodoroCycleCount > 0 && pomodoroCycleCount % POMODORO_CYCLES === 0;
-        genericToast(isLong ? '☕ Uzun mola zamanı! (15 dk)' : '☕ Mola zamanı! (5 dk)');
+        genericToast(isLong ? '☕ Uzun mola zamanı! (15 dk)' : '☕ Mola zamanı! (' + pomodoroBreakMin + ' dk)');
       } else {
-        genericToast('🍅 Çalışma zamanı! (25 dk)');
+        genericToast('🍅 Çalışma zamanı! (' + pomodoroWorkMin + ' dk)');
       }
     }
   }
@@ -1927,10 +2028,10 @@ window.addEventListener('unhandledrejection', function(e){
       var elapsedInPhase = now - phaseStartTs;
       var targetMs;
       if(status === 'studying'){
-        targetMs = POMODORO_WORK_MS;
+        targetMs = pomodoroWorkMs();
       } else {
         var isLong = pomodoroCycleCount > 0 && pomodoroCycleCount % POMODORO_CYCLES === 0;
-        targetMs = isLong ? POMODORO_LONG_BREAK_MS : POMODORO_BREAK_MS;
+        targetMs = isLong ? POMODORO_LONG_BREAK_MS : pomodoroBreakMs();
       }
       var remaining = Math.max(0, targetMs - elapsedInPhase);
       document.getElementById('timer-main').textContent = fmtHMS(remaining);
@@ -1969,6 +2070,7 @@ window.addEventListener('unhandledrejection', function(e){
     requestNotifPermission();
     updateNotification();
     if(pomodoroMode) updatePomodoroCycleLabel();
+    joinLiveActivity();
   };
 
   document.getElementById('break-btn').onclick = function(){
@@ -1995,6 +2097,7 @@ window.addEventListener('unhandledrejection', function(e){
     saveActive();
     renderAll();
     pushRemote();
+    leaveLiveActivity();
   };
 
   document.querySelectorAll('#breakdown-tabs .tab').forEach(function(tab){
