@@ -125,6 +125,9 @@
   .badge-card.claimable{ border-color: var(--study); box-shadow: var(--glow-strong); animation: badgePulse 1.8s ease-in-out infinite; }
   @keyframes badgePulse{ 0%, 100%{ transform: scale(1); } 50%{ transform: scale(1.02); } }
   .badge-icon-circle{ width:50px; height:50px; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:24px; background: var(--surface); }
+  .badge-icon-circle svg{ width:26px; height:26px; }
+  .badge-icon-circle.locked svg{ color: var(--text-muted); }
+  .badge-icon-circle.unlocked svg, .badge-icon-circle.claimable svg{ color: var(--study); }
   .badge-icon-circle.unlocked{ background: var(--study-dim); box-shadow: 0 0 16px rgba(255,229,0,0.4), inset 0 0 0 2px var(--study); }
   .badge-icon-circle.claimable{ background: var(--study-dim); box-shadow: 0 0 18px rgba(255,229,0,0.45); }
   .badge-claim-btn{ width:100%; margin-top:8px; padding:7px 0; font-size:11.5px; font-weight:700; background: var(--study); border-color: var(--study); color:#100F08; border-radius:8px; }
@@ -168,6 +171,7 @@
   .toggle-switch input:checked ~ .toggle-thumb{ transform: translateX(19px); background: var(--study); box-shadow: var(--glow-soft); }
   .pomodoro-cycle-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color: var(--study); background: var(--study-dim); border-radius:999px; padding:5px 12px; margin-bottom:14px; }
   .stepper-btn{ width:26px; height:26px; padding:0; border-radius:50%; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .btn-icon{ width:16px; height:16px; vertical-align:-3px; margin-right:4px; }
   .lb-row{ display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px; margin-bottom:6px; }
   .lb-row-top{ background: var(--surface-2); }
   .lb-row-me{ border: 1px solid var(--study); box-shadow: var(--glow-soft); }
@@ -223,13 +227,13 @@
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
     <h1 style="margin:0;">Odakl<span>a</span></h1>
     <div id="header-icons" style="display:none; gap:8px;">
-      <button class="icon-btn" id="theme-toggle-btn" title="Tema"><svg id="theme-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="icon-btn" id="theme-toggle-btn" title="Tema"><span id="theme-icon-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" /><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" /><path d="M19 11h2m-1 -1v2" /></svg></span></button>
       <button class="icon-btn" id="achievements-toggle-btn" title="Başarımlar" style="position:relative;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 13.5 7 22l5-3 5 3-2-8.5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M8.5 10.5l-1 -2.5h-5.5l2.48 5.788a2 2 0 0 0 1.84 1.212h2.18" /><path d="M15.5 10.5l1 -2.5h5.5l-2.48 5.788a2 2 0 0 1 -1.84 1.212h-2.18" /></svg>
         <span id="achievements-count-badge" style="display:none; position:absolute; top:-3px; right:-3px; background:var(--study); color:#100F08; font-size:9px; font-weight:700; min-width:15px; height:15px; border-radius:999px; align-items:center; justify-content:center; padding:0 3px;"></span>
       </button>
-      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><span id="league-icon-display"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 5H4a2 2 0 0 0 0 4h1M17 5h3a2 2 0 0 1 0 4h-1"/></svg></span></button>
-      <button class="icon-btn" id="admin-toggle-btn" title="Yönetici Paneli" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+      <button class="icon-btn" id="leaderboard-toggle-btn" title="Liderlik tablosu"><span id="league-icon-display"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6V2h-1"/><path d="M9 15a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1"/><path d="M9 21V11a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v10"/></svg></span></button>
+      <button class="icon-btn" id="admin-toggle-btn" title="Yönetici Paneli" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3c.568 1.933 .635 3.957 .223 5.89" /><path d="M17.001 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19.001 15.5v1.5" /><path d="M19.001 21v1.5" /><path d="M22.032 17.25l-1.299 .75" /><path d="M17.27 20l-1.3 .75" /><path d="M15.97 17.25l1.3 .75" /><path d="M20.733 20l1.3 .75" /></svg></button>
       <button class="icon-btn" id="profile-toggle-btn" title="Hesabım"></button>
     </div>
   </div>
@@ -521,13 +525,13 @@
 
       <div class="add-row">
         <input type="text" id="new-course" placeholder="Yeni ders adı (örn. Matematik, Gitar, İngilizce)">
-        <button id="add-course-btn">+ Ekle</button>
+        <button id="add-course-btn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Ekle</button>
       </div>
 
       <div class="btn-row">
-        <button class="primary" id="start-btn">▶ Başlat</button>
+        <button class="primary" id="start-btn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16l13 -8l-13 -8"/></svg> Başlat</button>
         <button id="break-btn" style="display:none;"></button>
-        <button id="stop-btn" style="display:none;">⏹ Bitir</button>
+        <button id="stop-btn" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -10"/></svg> Bitir</button>
       </div>
     </div>
 
@@ -540,10 +544,10 @@
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
         <p style="margin:0; font-weight:600; font-size:14px;">🔥 <span id="streak-count">0</span> günlük seri</p>
-        <button id="streak-share-btn" style="padding:5px 12px; font-size:11px;">📤 Paylaş</button>
+        <button id="streak-share-btn" style="padding:5px 12px; font-size:11px;"><svg class="btn-icon" style="margin-right:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M8.7 10.7l6.6 -3.4" /><path d="M8.7 13.3l6.6 3.4" /></svg> Paylaş</button>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <p class="section-label" style="margin:0;">Haftalık hedef</p>
+        <p class="section-label" style="margin:0; display:flex; align-items:center; gap:6px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 7a5 5 0 1 0 5 5" /><path d="M13 3.055a9 9 0 1 0 7.941 7.945" /><path d="M15 6v3h3l3 -3h-3v-3l-3 3" /><path d="M15 9l-3 3" /></svg> Haftalık hedef</p>
         <button id="goal-edit-btn" style="padding:4px 10px; font-size:11px;">Düzenle</button>
       </div>
       <div class="track" style="margin-bottom:6px;"><div class="fill" id="goal-fill" style="width:0%; background:var(--study);"></div></div>
@@ -604,8 +608,8 @@ window.addEventListener('unhandledrejection', function(e){
   var THEME_KEY = 'derstakip_theme';
   var savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
   if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  var MOON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  var SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var MOON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" /><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" /><path d="M19 11h2m-1 -1v2" /></svg>';
+  var SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/><path d="M16 12a4 4 0 0 0-4-4"/><path d="m19 5-1.256 1.256"/><path d="M20 12h2"/></svg>';
   function applyThemeIcon(){
     var btn = document.getElementById('theme-toggle-btn');
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -1214,6 +1218,20 @@ window.addEventListener('unhandledrejection', function(e){
     });
   }
 
+  var BADGE_ICONS = {
+    footprints: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5a2.5 2.5 0 0 0 5 0a1.5 1.5 0 0 0 -1.5 -1.5h-2a1.5 1.5 0 0 0 -1.5 1.5" /><path d="M15 18.5a2.5 2.5 0 0 0 5 0a1.5 1.5 0 0 0 -1.5 -1.5h-2a1.5 1.5 0 0 0 -1.5 1.5" /><path d="M8.52 12h-4.04c-.348 0 -.678 -.179 -.823 -.496c-1.326 -2.904 -.774 -8.504 2.843 -8.504s4.17 5.6 2.843 8.504c-.145 .317 -.475 .496 -.824 .496" /><path d="M19.52 14h-4.04c-.348 0 -.678 -.179 -.823 -.496c-1.326 -2.904 -.774 -8.504 2.843 -8.504s4.17 5.6 2.843 8.504c-.145 .317 -.475 .496 -.824 .496" /></svg>',
+    hourglass: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7h11" /><path d="M6.5 17h11" /><path d="M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1" /><path d="M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1" /></svg>',
+    award: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" /><path d="M12 15l3.4 5.89l1.598 -3.233l3.598 .232l-3.4 -5.889" /><path d="M6.802 12l-3.4 5.89l3.598 -.233l1.598 3.232l3.4 -5.889" /></svg>',
+    barbell: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h1" /><path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" /><path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" /><path d="M9 12h6" /><path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" /><path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" /><path d="M22 12h-1" /></svg>',
+    crown: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6l4 6l5 -4l-2 10h-14l-2 -10l5 4l4 -6" /></svg>',
+    flameSmall: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10.941c2.333 -3.308 .167 -7.823 -1 -8.941c0 3.395 -2.235 5.299 -3.667 6.706c-1.43 1.408 -2.333 3.294 -2.333 5.588c0 3.704 3.134 6.706 7 6.706c3.866 0 7 -3.002 7 -6.706c0 -1.712 -1.232 -4.403 -2.333 -5.588c-2.084 3.353 -3.257 3.353 -4.667 2.235" /></svg>',
+    flameMed: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg>',
+    flameBig: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M173.79,51.48a221.25,221.25,0,0,0-41.67-34.34,8,8,0,0,0-8.24,0A221.25,221.25,0,0,0,82.21,51.48C54.59,80.48,40,112.47,40,144a88,88,0,0,0,176,0C216,112.47,201.41,80.48,173.79,51.48ZM96,184c0-27.67,22.53-47.28,32-54.3,9.48,7,32,26.63,32,54.3a32,32,0,0,1-64,0Zm77.27,15.93A47.8,47.8,0,0,0,176,184c0-44-42.09-69.79-43.88-70.86a8,8,0,0,0-8.24,0C122.09,114.21,80,140,80,184a47.8,47.8,0,0,0,2.73,15.93A71.88,71.88,0,0,1,56,144c0-34.41,20.4-63.15,37.52-81.19A216.21,216.21,0,0,1,128,33.54a215.77,215.77,0,0,1,34.48,29.27C193.49,95.5,200,125,200,144A71.88,71.88,0,0,1,173.27,199.93Z"/></svg>',
+    shapes: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.007v7.986a2 2 0 0 1 -1.006 1.735l-7 4.007a2 2 0 0 1 -1.988 0l-7 -4.007a2 2 0 0 1 -1.006 -1.735v-7.986a2 2 0 0 1 1.006 -1.735l7 -4.007a2 2 0 0 1 1.988 0l7 4.007a2 2 0 0 1 1.006 1.735" /><path d="M3.29 6.97l4.21 2.03" /><path d="M20.71 6.97l-4.21 2.03" /><path d="M20.7 17h-17.4" /><path d="M11.76 2.03l-4.26 6.97l-4.3 7.84" /><path d="M12.24 2.03q 2.797 4.44 4.26 6.97t 4.3 7.84" /><path d="M12 17l-4.5 -8h9l-4.5 8" /><path d="M12 17v5" /></svg>',
+    bird: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-2" /><path d="M15 8.01v.01" /><path d="M3 17l8 -8v-1a4 4 0 1 1 8 0h2l-2 2v1a7 7 0 0 1 -13.215 3.223" /></svg>',
+    calendarCheck: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>'
+  };
+
   function computeBadges(){
     var totalMs = sessions.reduce(function(sum, s){ return sum + s.studyMs; }, 0);
     var streak = computeStreak();
@@ -1252,21 +1270,21 @@ window.addEventListener('unhandledrejection', function(e){
     var distinctDaysThisWeek = Object.keys(daysThisWeek).length;
 
     return [
-      { icon: '🚀', name: 'İlk Adım', desc: 'İlk oturumunu tamamla', eligible: sessions.length >= 1, progress: Math.min(100, sessions.length * 100), progressLabel: sessions.length + ' / 1 oturum' },
-      timeBadge('⏱️', '1 Saat', 3600000),
-      timeBadge('⏳', '10 Saat Kulübü', 36000000),
-      timeBadge('💪', '50 Saat Kulübü', 180000000),
-      timeBadge('👑', '100 Saat Kulübü', 360000000),
-      streakBadge('🔥', '3 Günlük Seri', 3),
-      streakBadge('🔥', '7 Günlük Seri', 7),
-      streakBadge('🔥', '30 Günlük Seri', 30),
-      { icon: '🎨', name: 'Çok Yönlü', desc: '3 farklı ders ekle', eligible: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
+      { icon: BADGE_ICONS.footprints, name: 'İlk Adım', desc: 'İlk oturumunu tamamla', eligible: sessions.length >= 1, progress: Math.min(100, sessions.length * 100), progressLabel: sessions.length + ' / 1 oturum' },
+      timeBadge(BADGE_ICONS.hourglass, '1 Saat', 3600000),
+      timeBadge(BADGE_ICONS.award, '10 Saat Kulübü', 36000000),
+      timeBadge(BADGE_ICONS.barbell, '50 Saat Kulübü', 180000000),
+      timeBadge(BADGE_ICONS.crown, '100 Saat Kulübü', 360000000),
+      streakBadge(BADGE_ICONS.flameSmall, '3 Günlük Seri', 3),
+      streakBadge(BADGE_ICONS.flameMed, '7 Günlük Seri', 7),
+      streakBadge(BADGE_ICONS.flameBig, '30 Günlük Seri', 30),
+      { icon: BADGE_ICONS.shapes, name: 'Çok Yönlü', desc: '3 farklı ders ekle', eligible: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
       { icon: '🎯', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', eligible: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' },
       { icon: '🦉', name: 'Gece Kuşu', desc: 'Gece yarısı - 05:00 arası çalış', eligible: hasNightOwl, progress: hasNightOwl ? 100 : 0, progressLabel: hasNightOwl ? 'Tamamlandı' : 'Henüz yok' },
-      { icon: '🐦', name: 'Erkenci Kuş', desc: 'Sabah 05:00 - 08:00 arası çalış', eligible: hasEarlyBird, progress: hasEarlyBird ? 100 : 0, progressLabel: hasEarlyBird ? 'Tamamlandı' : 'Henüz yok' },
-      { icon: '🏃', name: 'Maraton', desc: 'Tek oturumda 3+ saat çalış', eligible: hasMarathon, progress: hasMarathon ? 100 : 0, progressLabel: hasMarathon ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: BADGE_ICONS.bird, name: 'Erkenci Kuş', desc: 'Sabah 05:00 - 08:00 arası çalış', eligible: hasEarlyBird, progress: hasEarlyBird ? 100 : 0, progressLabel: hasEarlyBird ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="m15 10.42 4.8-5.07"/><path d="M19 18h3"/><path d="M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"/></svg>', name: 'Maraton', desc: 'Tek oturumda 3+ saat çalış', eligible: hasMarathon, progress: hasMarathon ? 100 : 0, progressLabel: hasMarathon ? 'Tamamlandı' : 'Henüz yok' },
       { icon: '⚔️', name: 'Hafta Sonu Savaşçısı', desc: 'Cumartesi veya pazar çalış', eligible: hasWeekend, progress: hasWeekend ? 100 : 0, progressLabel: hasWeekend ? 'Tamamlandı' : 'Henüz yok' },
-      { icon: '📅', name: 'Kararlılık', desc: 'Bu hafta 5 farklı gün çalış', eligible: distinctDaysThisWeek >= 5, progress: Math.min(100, Math.round(distinctDaysThisWeek / 5 * 100)), progressLabel: distinctDaysThisWeek + ' / 5 gün' }
+      { icon: BADGE_ICONS.calendarCheck, name: 'Kararlılık', desc: 'Bu hafta 5 farklı gün çalış', eligible: distinctDaysThisWeek >= 5, progress: Math.min(100, Math.round(distinctDaysThisWeek / 5 * 100)), progressLabel: distinctDaysThisWeek + ' / 5 gün' }
     ];
   }
 
@@ -1888,12 +1906,12 @@ window.addEventListener('unhandledrejection', function(e){
       stopBtn.style.display = '';
       if(status === 'studying'){
         breakBtn.className = 'warn';
-        breakBtn.innerHTML = '⏸ Mola ver';
+        breakBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"></path></svg> Mola ver';
         badge.className = 'phase-badge studying';
         phaseText.textContent = 'Çalışıyor';
       } else {
         breakBtn.className = 'primary';
-        breakBtn.innerHTML = '▶ Devam et';
+        breakBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16l13 -8l-13 -8"/></svg> Devam et';
         badge.className = 'phase-badge break';
         phaseText.textContent = 'Molada';
       }
