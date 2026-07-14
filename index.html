@@ -249,6 +249,12 @@
     <div id="auth-form-wrap" class="auth-form" style="display:none;">
       <p class="section-label" id="auth-title">Giriş yap</p>
       <input type="text" id="auth-name" placeholder="adın" style="display:none;">
+      <select id="auth-category" style="display:none; width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px; margin-bottom:16px;">
+        <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
+        <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
+        <option value="kitap">📖 Kitap &amp; Araştırma</option>
+        <option value="diger">✨ Diğer</option>
+      </select>
       <input type="email" id="auth-email" placeholder="e-posta adresin">
       <input type="password" id="auth-password" placeholder="şifre (en az 6 karakter)">
       <label id="auth-terms-row" style="display:none; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--text-secondary); margin-bottom:14px; cursor:pointer;">
@@ -338,6 +344,14 @@
           </div>
           <button id="export-csv-btn" style="padding:8px 14px; font-size:12px;">İndir</button>
         </div>
+
+        <p class="section-label" style="margin-top:16px; margin-bottom:8px;">Odak kategorin</p>
+        <select id="profile-category-select" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px;">
+          <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
+          <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
+          <option value="kitap">📖 Kitap &amp; Araştırma</option>
+          <option value="diger">✨ Diğer</option>
+        </select>
       </div>
 
       <div id="settings-tab-security" style="display:none; margin-top:16px;">
@@ -508,17 +522,8 @@
         <span class="pomodoro-cycle-badge" id="pomodoro-cycle-label" style="display:none;"></span>
       </div>
 
-      <div style="margin-bottom:14px;">
-        <div class="sync-sub" style="margin-bottom:6px; text-align:center;">Ne üzerine odaklanıyorsun?</div>
-        <select id="category-select" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px; margin-bottom:8px;">
-          <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
-          <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
-          <option value="kitap">📖 Kitap &amp; Araştırma</option>
-          <option value="diger">✨ Diğer</option>
-        </select>
-        <div style="text-align:center;">
-          <span class="pomodoro-cycle-badge" id="live-count-badge" style="display:none;"></span>
-        </div>
+      <div style="text-align:center; margin-bottom:14px;">
+        <span class="pomodoro-cycle-badge" id="live-count-badge" style="display:none;"></span>
       </div>
 
       <div class="pills" id="course-row"></div>
@@ -547,7 +552,7 @@
         <button id="streak-share-btn" style="padding:5px 12px; font-size:11px;"><svg class="btn-icon" style="margin-right:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M8.7 10.7l6.6 -3.4" /><path d="M8.7 13.3l6.6 3.4" /></svg> Paylaş</button>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <p class="section-label" style="margin:0; display:flex; align-items:center; gap:6px;"><svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 7a5 5 0 1 0 5 5" /><path d="M13 3.055a9 9 0 1 0 7.941 7.945" /><path d="M15 6v3h3l3 -3h-3v-3l-3 3" /><path d="M15 9l-3 3" /></svg> Haftalık hedef</p>
+        <p class="section-label" style="margin:0;">Haftalık hedef</p>
         <button id="goal-edit-btn" style="padding:4px 10px; font-size:11px;">Düzenle</button>
       </div>
       <div class="track" style="margin-bottom:6px;"><div class="fill" id="goal-fill" style="width:0%; background:var(--study);"></div></div>
@@ -766,6 +771,8 @@ window.addEventListener('unhandledrejection', function(e){
     document.getElementById('profile-email-input').value = '';
     document.getElementById('profile-password-input').value = '';
     document.getElementById('profile-password-link-input').value = '';
+    var catSel = document.getElementById('profile-category-select');
+    if(catSel) catSel.value = selectedCategory;
     if(!user.isAnonymous) renderVerifyStatus(user, hasPasswordProvider);
     else document.getElementById('verify-banner').style.display = 'none';
   }
@@ -1279,11 +1286,11 @@ window.addEventListener('unhandledrejection', function(e){
       streakBadge(BADGE_ICONS.flameMed, '7 Günlük Seri', 7),
       streakBadge(BADGE_ICONS.flameBig, '30 Günlük Seri', 30),
       { icon: BADGE_ICONS.shapes, name: 'Çok Yönlü', desc: '3 farklı ders ekle', eligible: courses.length >= 3, progress: Math.min(100, Math.round(courses.length / 3 * 100)), progressLabel: courses.length + ' / 3 ders' },
-      { icon: '🎯', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', eligible: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' },
+      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 7a5 5 0 1 0 5 5" /><path d="M13 3.055a9 9 0 1 0 7.941 7.945" /><path d="M15 6v3h3l3 -3h-3v-3l-3 3" /><path d="M15 9l-3 3" /></svg>', name: 'Hedef Avcısı', desc: 'Haftalık hedefine ulaş', eligible: goalMs > 0 && haveWeekMs >= goalMs, progress: goalMs > 0 ? Math.min(100, Math.round(haveWeekMs / goalMs * 100)) : 0, progressLabel: goalMs > 0 ? (fmtDuration(haveWeekMs) + ' / ' + fmtDuration(goalMs)) : 'Önce hedef belirle' },
       { icon: '🦉', name: 'Gece Kuşu', desc: 'Gece yarısı - 05:00 arası çalış', eligible: hasNightOwl, progress: hasNightOwl ? 100 : 0, progressLabel: hasNightOwl ? 'Tamamlandı' : 'Henüz yok' },
       { icon: BADGE_ICONS.bird, name: 'Erkenci Kuş', desc: 'Sabah 05:00 - 08:00 arası çalış', eligible: hasEarlyBird, progress: hasEarlyBird ? 100 : 0, progressLabel: hasEarlyBird ? 'Tamamlandı' : 'Henüz yok' },
       { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="m15 10.42 4.8-5.07"/><path d="M19 18h3"/><path d="M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"/></svg>', name: 'Maraton', desc: 'Tek oturumda 3+ saat çalış', eligible: hasMarathon, progress: hasMarathon ? 100 : 0, progressLabel: hasMarathon ? 'Tamamlandı' : 'Henüz yok' },
-      { icon: '⚔️', name: 'Hafta Sonu Savaşçısı', desc: 'Cumartesi veya pazar çalış', eligible: hasWeekend, progress: hasWeekend ? 100 : 0, progressLabel: hasWeekend ? 'Tamamlandı' : 'Henüz yok' },
+      { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M21 3v5l-11 9l-4 4l-3 -3l4 -4l9 -11l5 0" /><path d="M5 13l6 6" /><path d="M14.32 17.32l3.68 3.68l3 -3l-3.365 -3.365" /><path d="M10 5.5l-2 -2.5h-5v5l3 2.5" /></svg>', name: 'Hafta Sonu Savaşçısı', desc: 'Cumartesi veya pazar çalış', eligible: hasWeekend, progress: hasWeekend ? 100 : 0, progressLabel: hasWeekend ? 'Tamamlandı' : 'Henüz yok' },
       { icon: BADGE_ICONS.calendarCheck, name: 'Kararlılık', desc: 'Bu hafta 5 farklı gün çalış', eligible: distinctDaysThisWeek >= 5, progress: Math.min(100, Math.round(distinctDaysThisWeek / 5 * 100)), progressLabel: distinctDaysThisWeek + ' / 5 gün' }
     ];
   }
@@ -1422,6 +1429,10 @@ window.addEventListener('unhandledrejection', function(e){
     pushRemote();
   };
 
+  document.getElementById('profile-category-select').onchange = function(){
+    saveProfileCategory(this.value);
+  };
+
   document.getElementById('export-csv-btn').onclick = function(){
     var rows = [['Tarih', 'Ders', 'Çalışma (dk)', 'Mola (dk)']];
     sessions.slice().sort(function(a, b){ return (a.endedAt || 0) - (b.endedAt || 0); }).forEach(function(s){
@@ -1522,7 +1533,6 @@ window.addEventListener('unhandledrejection', function(e){
       if(status !== 'idle') startTicking();
       renderAll();
       pullAndSubscribeFirestore();
-      initCategorySelect();
       subscribeLiveCount();
     } else {
       currentUid = null;
@@ -1540,15 +1550,24 @@ window.addEventListener('unhandledrejection', function(e){
   var selectedCategory = localStorage.getItem('derstakip_category') || 'yazilim';
   var liveCountUnsub = null;
 
-  function initCategorySelect(){
-    var sel = document.getElementById('category-select');
-    sel.value = selectedCategory;
-    sel.onchange = function(){
-      selectedCategory = sel.value;
-      localStorage.setItem('derstakip_category', selectedCategory);
-      subscribeLiveCount();
-    };
+  async function saveProfileCategory(newCategory){
+    selectedCategory = newCategory;
+    localStorage.setItem('derstakip_category', selectedCategory);
+    subscribeLiveCount();
+    if(!currentUid) return;
+    try{
+      await initFirebase();
+      var ref = fbFsMod.doc(fbDb, 'derstakip_users', currentUid);
+      await fbFsMod.setDoc(ref, { category: selectedCategory, updatedAt: Date.now() }, { merge: true });
+    } catch(e){}
   }
+
+  var CATEGORY_ICONS = {
+    yazilim: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10" /><path d="M6 8h.01" /><path d="M9 8h.01" /></svg>',
+    sinav: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="m16 12 2 2 4-4"/><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"/></svg>',
+    kitap: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>',
+    diger: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>'
+  };
 
   async function subscribeLiveCount(){
     var badge = document.getElementById('live-count-badge');
@@ -1560,7 +1579,7 @@ window.addEventListener('unhandledrejection', function(e){
         var count = snap.size;
         if(count > 0){
           badge.style.display = '';
-          badge.textContent = '🟢 Şu an ' + count + ' kişi bu kategoride odaklanıyor';
+          badge.innerHTML = (CATEGORY_ICONS[selectedCategory] || '') + ' Şu an ' + count + ' kişi bu kategoride odaklanıyor';
         } else {
           badge.style.display = 'none';
         }
@@ -1667,6 +1686,13 @@ window.addEventListener('unhandledrejection', function(e){
           var toggleEl = document.getElementById('leaderboard-visible-toggle');
           if(toggleEl) toggleEl.checked = leaderboardVisible;
         }
+        if(remote.category){
+          selectedCategory = remote.category;
+          localStorage.setItem('derstakip_category', selectedCategory);
+          var catEl = document.getElementById('profile-category-select');
+          if(catEl) catEl.value = selectedCategory;
+          subscribeLiveCount();
+        }
         if(!remote.onboarded && localStorage.getItem('derstakip_onboarded_' + currentUid) !== '1'){
           showOnboardingTour();
         }
@@ -1702,6 +1728,7 @@ window.addEventListener('unhandledrejection', function(e){
     document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Giriş yap' : 'Kayıt ol';
     document.getElementById('auth-switch-btn').textContent = authMode === 'login' ? 'Hesabın yok mu? Kayıt ol' : 'Hesabın var mı? Giriş yap';
     document.getElementById('auth-name').style.display = authMode === 'signup' ? '' : 'none';
+    document.getElementById('auth-category').style.display = authMode === 'signup' ? '' : 'none';
     document.getElementById('auth-terms-row').style.display = authMode === 'signup' ? 'flex' : 'none';
     document.getElementById('auth-error').textContent = '';
   };
@@ -1735,6 +1762,13 @@ window.addEventListener('unhandledrejection', function(e){
         }
         try{ await fbAuthMod.updateProfile(cred.user, { displayName: name }); } catch(e3){}
         try{ await fbAuthMod.sendEmailVerification(cred.user); } catch(e2){}
+        try{
+          var chosenCategory = document.getElementById('auth-category').value;
+          selectedCategory = chosenCategory;
+          localStorage.setItem('derstakip_category', chosenCategory);
+          var ref = fbFsMod.doc(fbDb, 'derstakip_users', cred.user.uid);
+          await fbFsMod.setDoc(ref, { category: chosenCategory, updatedAt: Date.now() }, { merge: true });
+        } catch(e4){}
       } else {
         await fbAuthMod.signInWithEmailAndPassword(fbAuth, email, pass);
       }
