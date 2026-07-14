@@ -251,8 +251,10 @@
       <input type="text" id="auth-name" placeholder="adın" style="display:none;">
       <select id="auth-category" style="display:none; width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px; margin-bottom:16px;">
         <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
-        <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
-        <option value="kitap">📖 Kitap &amp; Araştırma</option>
+        <option value="yks">📝 YKS</option>
+        <option value="universite">🎓 Üniversite (Vize/Final)</option>
+        <option value="spor">🏋️ Spor &amp; Fitness</option>
+        <option value="dil">🇬🇧 Yabancı Dil</option>
         <option value="diger">✨ Diğer</option>
       </select>
       <input type="email" id="auth-email" placeholder="e-posta adresin">
@@ -348,8 +350,10 @@
         <p class="section-label" style="margin-top:16px; margin-bottom:8px;">Odak kategorin</p>
         <select id="profile-category-select" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-primary); border-radius:8px; padding:9px 12px; font-size:13px;">
           <option value="yazilim">💻 Yazılım &amp; Kodlama</option>
-          <option value="sinav">📚 Sınav (Vize/Final/YKS)</option>
-          <option value="kitap">📖 Kitap &amp; Araştırma</option>
+          <option value="yks">📝 YKS</option>
+          <option value="universite">🎓 Üniversite (Vize/Final)</option>
+          <option value="spor">🏋️ Spor &amp; Fitness</option>
+          <option value="dil">🇬🇧 Yabancı Dil</option>
           <option value="diger">✨ Diğer</option>
         </select>
       </div>
@@ -525,6 +529,8 @@
       <div style="text-align:center; margin-bottom:14px;">
         <span class="pomodoro-cycle-badge" id="live-count-badge" style="display:none;"></span>
       </div>
+
+      <div id="category-flair" style="display:none; margin-bottom:14px;"></div>
 
       <div class="pills" id="course-row"></div>
 
@@ -1564,14 +1570,76 @@ window.addEventListener('unhandledrejection', function(e){
 
   var CATEGORY_ICONS = {
     yazilim: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10" /><path d="M6 8h.01" /><path d="M9 8h.01" /></svg>',
-    sinav: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="m16 12 2 2 4-4"/><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"/></svg>',
-    kitap: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>',
+    yks: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="m16 12 2 2 4-4"/><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"/></svg>',
+    universite: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></svg>',
+    spor: '🏋️',
+    dil: '🇬🇧',
     diger: '<svg style="width:14px;height:14px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>'
   };
+
+  var DEV_JOKES = [
+    'Kod çalışmıyor mu? Bir kahve daha iç, sorun kendi kendine çözülebilir. ☕',
+    '99 küçük hata duvardan düştü... birini düzelt, 127 küçük hata duvardan düşer.',
+    'İyi kod kendini açıklar. Harika kod hiç açıklamaya gerek bırakmaz. Senin kodun neyse artık...',
+    '"Çalışıyor mu?" "Bende çalışıyordu." klasik.',
+    'Bir programcı karanlıkta çalışmayı sever, çünkü "light" mode\'da bug\'lar daha çok gözükür.',
+    'console.log() en güvendiğin debugger\'dır, itiraf et.',
+    'Değişken adı seçmek, aslında yazılımın en zor problemidir.',
+    'Git commit mesajın "fix" ise, gerçekten neyi düzelttiğini sen de bilmiyorsundur.'
+  ];
+
+  var WORD_OF_DAY_LIST = [
+    { en: 'Focus', tr: 'Odaklanmak' }, { en: 'Achieve', tr: 'Başarmak' }, { en: 'Diligent', tr: 'Çalışkan' },
+    { en: 'Persist', tr: 'Israr etmek' }, { en: 'Curious', tr: 'Meraklı' }, { en: 'Insight', tr: 'İç görü' },
+    { en: 'Progress', tr: 'İlerleme' }, { en: 'Discipline', tr: 'Disiplin' }, { en: 'Consistent', tr: 'Tutarlı' },
+    { en: 'Ambitious', tr: 'Hırslı' }, { en: 'Thorough', tr: 'Titiz' }, { en: 'Resilient', tr: 'Dirençli' },
+    { en: 'Motivate', tr: 'Motive etmek' }, { en: 'Grasp', tr: 'Kavramak' }, { en: 'Clarify', tr: 'Netleştirmek' },
+    { en: 'Endeavor', tr: 'Gayret / çaba' }, { en: 'Milestone', tr: 'Kilometre taşı' }, { en: 'Retain', tr: 'Akılda tutmak' },
+    { en: 'Overcome', tr: 'Üstesinden gelmek' }, { en: 'Diligence', tr: 'Özen / gayret' }
+  ];
+
+  function dayOfYear(){
+    var now = new Date();
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    return Math.floor(diff / 86400000);
+  }
+
+  function renderCategoryFlair(){
+    var el = document.getElementById('category-flair');
+    if(!el) return;
+    var doy = dayOfYear();
+    if(selectedCategory === 'yazilim'){
+      el.style.display = '';
+      var joke = DEV_JOKES[doy % DEV_JOKES.length];
+      el.innerHTML = '<div class="sync-sub" style="text-align:center; font-style:italic;">💻 ' + escapeHtml(joke) + '</div>';
+    } else if(selectedCategory === 'yks'){
+      el.style.display = '';
+      var yksDate = new Date('2027-06-19T10:15:00');
+      var diffMs = yksDate - new Date();
+      var days = Math.max(0, Math.floor(diffMs / 86400000));
+      var hours = Math.max(0, Math.floor((diffMs % 86400000) / 3600000));
+      el.innerHTML = '<div class="sync-sub" style="text-align:center;">📝 YKS\'ye tahmini <strong style="color:var(--text-primary);">' + days + ' gün ' + hours + ' saat</strong> kaldı <span style="opacity:0.7;">(ÖSYM henüz kesin tarih açıklamadı)</span></div>';
+    } else if(selectedCategory === 'universite'){
+      el.style.display = '';
+      el.innerHTML = '<div class="sync-sub" style="text-align:center;">🎓 Bu oturumda geçmen gereken notu aklında tut, hedefe kilitlen!</div>';
+    } else if(selectedCategory === 'spor'){
+      el.style.display = '';
+      el.innerHTML = '<div class="sync-sub" style="text-align:center;">🏋️ İpucu: Setler arası 1-2 dk mola için Pomodoro mola süresini düşür, ya da Pomodoro\'yu kapatıp düz kronometre kullan.</div>';
+    } else if(selectedCategory === 'dil'){
+      el.style.display = '';
+      var word = WORD_OF_DAY_LIST[doy % WORD_OF_DAY_LIST.length];
+      el.innerHTML = '<div class="sync-sub" style="text-align:center;">🇬🇧 Günün kelimesi: <strong style="color:var(--text-primary);">' + escapeHtml(word.en) + '</strong> — ' + escapeHtml(word.tr) + '</div>';
+    } else {
+      el.style.display = 'none';
+      el.innerHTML = '';
+    }
+  }
 
   async function subscribeLiveCount(){
     var badge = document.getElementById('live-count-badge');
     if(liveCountUnsub){ liveCountUnsub(); liveCountUnsub = null; }
+    renderCategoryFlair();
     try{
       await initFirebase();
       var q = fbFsMod.query(fbFsMod.collection(fbDb, 'live_activity'), fbFsMod.where('category', '==', selectedCategory));
@@ -1586,6 +1654,7 @@ window.addEventListener('unhandledrejection', function(e){
       }, function(){ badge.style.display = 'none'; });
     } catch(e){ badge.style.display = 'none'; }
   }
+
 
   async function joinLiveActivity(){
     if(!currentUid) return;
